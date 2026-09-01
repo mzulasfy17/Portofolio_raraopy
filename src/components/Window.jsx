@@ -77,9 +77,10 @@ export default function Window({ title, icon: Icon, tags = [], children, classNa
       <div 
         className={`pixel-window-content-wrapper ${isMinimized ? 'minimized' : 'expanded'}`}
         style={{ 
-          overflow: 'hidden',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          maxHeight: isMinimized ? '0px' : '2000px',
+          overflow: isMinimized ? 'hidden' : 'visible',
+          transition: 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          maxHeight: isMinimized ? '0px' : 'none',
+          display: isMinimized ? 'none' : 'block',
           opacity: isMinimized ? 0 : 1,
           padding: isMinimized ? '0px 16px' : '16px'
         }}

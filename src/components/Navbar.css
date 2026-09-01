@@ -177,7 +177,9 @@
     flex-direction: column;
     align-items: stretch;
     padding: 10px 14px;
-    margin: 10px 8px;
+    margin: 10px auto 14px auto;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .mobile-menu-toggle-btn {

@@ -144,7 +144,8 @@
 @media (max-width: 768px) {
   .footer-wrapper {
     margin: 20px auto 12px auto;
-    padding: 0 8px;
+    padding: 0 10px;
+    box-sizing: border-box;
   }
 
   .footer-container {

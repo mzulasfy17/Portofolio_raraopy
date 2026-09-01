@@ -5,6 +5,14 @@
   padding: 0 12px 32px 12px;
 }
 
+@media (max-width: 768px) {
+  .skills-container {
+    padding: 0 0 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .skills-layout {
   display: flex;
   gap: 20px;
