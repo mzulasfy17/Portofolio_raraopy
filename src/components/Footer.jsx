@@ -53,18 +53,25 @@ export default function Footer({ onReplayIntro }) {
 
         {/* Bottom Row: Copyright & Status */}
         <div className="footer-bottom-row">
-          <div>
+          <div className="footer-copyright">
             © 2026 RAHMA NOVRIDAYANTI. ALL RIGHTS RESERVED. 🐾
           </div>
 
           <div className="footer-status-box">
-            <span className="status-dot-pulse"></span>
-            <span>SYSTEM STATUS: ONLINE 🐾</span>
-            <span>|</span>
-            <span>SYS_TIME: {time} WIB</span>
+            <div className="footer-status-item">
+              <span className="status-dot-pulse"></span>
+              <span>SYSTEM STATUS: ONLINE 🐾</span>
+            </div>
+
+            <span className="status-divider">|</span>
+            
+            <div className="footer-status-item">
+              <span>SYS_TIME: {time} WIB</span>
+            </div>
+
             {onReplayIntro && (
               <>
-                <span>|</span>
+                <span className="status-divider">|</span>
                 <button className="footer-replay-btn" onClick={onReplayIntro} title="Replay Opening Splash Animation">
                   🎬 REPLAY INTRO
                 </button>

@@ -624,3 +624,22 @@
   font-family: var(--font-pixel-sub);
   font-size: 0.85rem;
 }
+
+@media (max-width: 640px) {
+  .experience-container {
+    padding: 0 4px 20px 4px;
+  }
+
+  .main-exp-title {
+    font-size: 1.1rem;
+  }
+
+  .exp-avatar-frame {
+    height: 220px;
+  }
+
+  .exp-card-head-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

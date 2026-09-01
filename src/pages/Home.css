@@ -567,3 +567,39 @@
   border-color: #9333ea;
   color: #581c87;
 }
+
+/* MOBILE AUTO-LAYOUT MEDIA QUERIES */
+@media (max-width: 600px) {
+  .home-container {
+    padding: 0 4px 20px 4px;
+    gap: 14px;
+  }
+
+  .welcome-heading {
+    font-size: 0.88rem;
+  }
+
+  .avatar-frame {
+    height: 220px;
+  }
+
+  .experience-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .experience-year-badge {
+    width: fit-content;
+    margin: 0 auto;
+    padding: 4px 12px;
+  }
+
+  .quest-actions {
+    width: 100%;
+  }
+
+  .quest-btn-primary, .quest-btn-secondary {
+    width: 100%;
+  }
+}
