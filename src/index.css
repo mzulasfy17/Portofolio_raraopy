@@ -1,0 +1,309 @@
+:root {
+  --bg-purple-primary: #b892ff;
+  --bg-purple-gradient: linear-gradient(135deg, #c8b6ff 0%, #907ad6 100%);
+  --window-bg: rgba(253, 248, 255, 0.96);
+  --window-border: #a855f7;
+  --window-header-bg: linear-gradient(90deg, #ede9fe 0%, #ddd6fe 100%);
+  --pixel-text-dark: #3b0764;
+  --pixel-text-muted: #6b21a8;
+  --pixel-accent-purple: #8b5cf6;
+  --pixel-accent-deep: #6b21a8;
+  --pixel-tag-bg: #f3e8ff;
+  --pixel-tag-border: #c084fc;
+  --pixel-tag-text: #6b21a8;
+  --pixel-shadow: 4px 4px 0px rgba(107, 33, 168, 0.25);
+  --pixel-border-inset: inset -2px -2px 0px #d8b4fe, inset 2px 2px 0px #ffffff;
+  
+  --font-pixel-heading: 'Press Start 2P', monospace;
+  --font-pixel-sub: 'Space Grotesk', 'Silkscreen', sans-serif;
+  --font-pixel-body: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+img, .pixel-avatar-img, .splash-avatar-img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+body {
+  font-family: var(--font-pixel-body);
+  background: var(--bg-purple-gradient);
+  background-attachment: fixed;
+  color: var(--pixel-text-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Pixel Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3e8ff;
+  border: 2px solid #c084fc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9333ea;
+  border: 2px solid #ffffff;
+  box-shadow: inset -2px -2px 0px #6b21a8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7e22ce;
+}
+
+/* Pixel Box Styling */
+.pixel-box {
+  background: var(--window-bg);
+  border: 3px solid var(--window-border);
+  box-shadow: var(--pixel-shadow);
+  border-radius: 8px;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+}
+
+.pixel-box:hover {
+  box-shadow: 6px 6px 0px rgba(107, 33, 168, 0.3);
+}
+
+/* Retro Pixel Button Micro-Interactions */
+.pixel-btn {
+  font-family: var(--font-pixel-sub);
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 2px solid #a855f7;
+  color: #6b21a8;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #6b21a8;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.pixel-btn:hover {
+  background: #f3e8ff;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px #6b21a8;
+}
+
+.pixel-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #6b21a8;
+}
+
+.pixel-btn.active {
+  background: #9333ea;
+  color: #ffffff;
+  box-shadow: inset 2px 2px 0px #581c87;
+}
+
+/* Pixel Badge */
+.pixel-badge {
+  font-family: var(--font-pixel-sub);
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  background: #f3e8ff;
+  border: 1px solid #c084fc;
+  color: #6b21a8;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.pixel-badge:hover {
+  transform: scale(1.05);
+  background: #ede9fe;
+}
+
+/* Pixel Cat Micro-Animations */
+@keyframes catFloating {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+
+@keyframes catWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes pawPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+
+@keyframes bubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(12px);
+  }
+  70% {
+    transform: scale(1.03) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.cat-speech-bubble-pop {
+  animation: bubblePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animated-cat-bounce {
+  animation: catFloating 2.8s ease-in-out infinite;
+}
+
+.animated-cat-wiggle {
+  animation: catWiggle 3s ease-in-out infinite;
+}
+
+.animated-paw-pulse {
+  animation: pawPulse 2s ease-in-out infinite;
+}
+
+/* Pixel Profile Walking Animation (Left & Right with Step Bobbing) */
+@keyframes pixelCharacterWalk {
+  0% {
+    transform: translateX(-40px) translateY(0) scaleX(1);
+  }
+  12.5% {
+    transform: translateX(-20px) translateY(-5px) scaleX(1);
+  }
+  25% {
+    transform: translateX(0px) translateY(0) scaleX(1);
+  }
+  37.5% {
+    transform: translateX(20px) translateY(-5px) scaleX(1);
+  }
+  48% {
+    transform: translateX(40px) translateY(0) scaleX(1);
+  }
+  50% {
+    transform: translateX(40px) translateY(0) scaleX(-1);
+  }
+  62.5% {
+    transform: translateX(20px) translateY(-5px) scaleX(-1);
+  }
+  75% {
+    transform: translateX(0px) translateY(0) scaleX(-1);
+  }
+  87.5% {
+    transform: translateX(-20px) translateY(-5px) scaleX(-1);
+  }
+  98% {
+    transform: translateX(-40px) translateY(0) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-40px) translateY(0) scaleX(1);
+  }
+}
+
+@keyframes pixelNavbarWalk {
+  0% {
+    transform: translateX(-4px) translateY(0) scaleX(1);
+  }
+  25% {
+    transform: translateX(0px) translateY(-2px) scaleX(1);
+  }
+  48% {
+    transform: translateX(4px) translateY(0) scaleX(1);
+  }
+  50% {
+    transform: translateX(4px) translateY(0) scaleX(-1);
+  }
+  75% {
+    transform: translateX(0px) translateY(-2px) scaleX(-1);
+  }
+  98% {
+    transform: translateX(-4px) translateY(0) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-4px) translateY(0) scaleX(1);
+  }
+}
+
+/* Pet Kitty Companion Overlay Styling */
+.walking-pet-kitty {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  z-index: 5;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: auto;
+  transition: transform 0.2s ease;
+}
+
+.walking-pet-kitty:hover {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+/* Micro-Animation Helpers for Every Page */
+@keyframes badgeGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.8), 0 0 20px rgba(192, 132, 252, 0.5);
+  }
+}
+
+@keyframes xpShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes floatBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulseBorderGlow {
+  0%, 100% {
+    border-color: #a855f7;
+  }
+  50% {
+    border-color: #c084fc;
+  }
+}
+
+.pixel-badge {
+  animation: badgeGlowPulse 3s ease-in-out infinite;
+}
+
+.avatar-badge,
+.skills-avatar-badge {
+  animation: badgeGlowPulse 2.5s ease-in-out infinite;
+}
+

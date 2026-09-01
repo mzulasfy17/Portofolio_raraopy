@@ -1,0 +1,126 @@
+/* SMOOTH PAGE CONTENT & MULTI-LAYER STAGGERED ENTRANCE ANIMATIONS FOR ALL VIEWS */
+
+.page-slide-in-container {
+  width: 100%;
+  animation: pageSlideUpFade 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes pageSlideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Staggered Element Entrance Animations across all views */
+
+/* 1. Primary Headers & Profile Cards (Delay 0.05s) */
+.page-slide-in-container h1,
+.page-slide-in-container h2,
+.page-slide-in-container .welcome-heading,
+.page-slide-in-container .main-exp-header,
+.page-slide-in-container .skills-photo-window,
+.page-slide-in-container .profile-card-window {
+  animation: elementSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.05s;
+}
+
+/* 2. Subtitles, Paragraphs & Badges (Delay 0.12s) */
+.page-slide-in-container p,
+.page-slide-in-container .about-paragraph,
+.page-slide-in-container .typewriter-badge,
+.page-slide-in-container .main-exp-subtitle,
+.page-slide-in-container .profile-tagline {
+  animation: elementSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.12s;
+}
+
+/* 3. Interactive Specialty Items, Filter Bars & Status Items (Delay 0.18s) */
+.page-slide-in-container .specialty-item,
+.page-slide-in-container .exp-category-bar,
+.page-slide-in-container .status-card-item,
+.page-slide-in-container .profile-info-item {
+  animation: elementSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.18s;
+}
+
+/* 4. Main Grid Cards & Windows (Experience, Skills, Projects) (Delay 0.24s) */
+.page-slide-in-container .experience-item,
+.page-slide-in-container .exp-timeline-item,
+.page-slide-in-container .tech-skill-card,
+.page-slide-in-container .soft-skill-card,
+.page-slide-in-container .cert-card-item,
+.page-slide-in-container .contact-form-window {
+  animation: cardStaggerPop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.25) both;
+  animation-delay: 0.24s;
+}
+
+/* 5. Secondary / Bottom Banners & Skill Chips (Delay 0.32s) */
+.page-slide-in-container .quest-banner-window,
+.page-slide-in-container .skills-pills,
+.page-slide-in-container .download-cv-container {
+  animation: elementSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.32s;
+}
+
+/* Keyframes for Staggered Animations */
+@keyframes elementSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes cardStaggerPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Shimmer & Glow Animation Utilities */
+@keyframes shinySweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes iconPulseSpin {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.15) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes badgeGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(192, 132, 252, 0.8);
+  }
+}
+

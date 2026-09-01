@@ -1,0 +1,148 @@
+/* Retro Desktop Status Bar Footer Styles */
+.footer-wrapper {
+  max-width: 1240px;
+  margin: 32px auto 16px auto;
+  padding: 0 12px;
+}
+
+.footer-container {
+  background: linear-gradient(135deg, #3b0764 0%, #2e1065 100%);
+  border: 3px solid #a855f7;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0px 6px 0px rgba(107, 33, 168, 0.3);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.footer-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .footer-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.footer-brand-title {
+  font-family: var(--font-pixel-heading);
+  font-size: 0.95rem;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-brand-sub {
+  font-family: var(--font-pixel-sub);
+  font-size: 0.65rem;
+  color: #c084fc;
+  margin-top: 4px;
+}
+
+.footer-social-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-social-btn {
+  width: 38px;
+  height: 38px;
+  background: #ffffff;
+  border: 1.5px solid #a855f7;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-decoration: none;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+.footer-social-btn:hover {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 3px 3px 0px rgba(168, 85, 247, 0.4);
+}
+
+.footer-social-btn.email-btn:hover {
+  border-color: #ea4335;
+  background: #fff5f5;
+}
+
+.footer-social-btn.linkedin-btn:hover {
+  border-color: #0a66c2;
+  background: #f0f7ff;
+}
+
+.footer-social-btn.whatsapp-btn:hover {
+  border-color: #25d366;
+  background: #f0fff4;
+}
+
+.footer-bottom-row {
+  border-top: 1px dashed #7e22ce;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-pixel-sub);
+  font-size: 0.65rem;
+  color: #e9d5ff;
+}
+
+@media (max-width: 768px) {
+  .footer-bottom-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.footer-status-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot-pulse {
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #4ade80;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.footer-replay-btn {
+  background: #7e22ce;
+  border: 1px solid #c084fc;
+  color: #ffffff;
+  font-family: var(--font-pixel-sub);
+  font-size: 0.6rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.footer-replay-btn:hover {
+  background: #a855f7;
+  transform: scale(1.05);
+}
+
