@@ -257,7 +257,13 @@ export default function Skills() {
                     onClick={() => setSelectedCert(cert)}
                     title={`Klik untuk lihat dokumen ${cert.title}`}
                   >
-                    <div className="cert-thumb-frame">
+                    <div 
+                      className="cert-thumb-frame"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCert(cert);
+                      }}
+                    >
                       <img 
                         src={cert.image} 
                         alt={cert.title} 
@@ -270,10 +276,18 @@ export default function Skills() {
                       <div className="cert-issuer">{cert.issuer}</div>
                       
                       <div className="cert-action-row">
-                        <span className="cert-preview-badge">
-                          <Eye size={12} />
+                        <button 
+                          type="button"
+                          className="cert-preview-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCert(cert);
+                          }}
+                          title="Buka pratinjau gambar sertifikat"
+                        >
+                          <Eye size={13} />
                           <span>LIHAT GAMBAR</span>
-                        </span>
+                        </button>
 
                         {cert.credentialUrl && (
                           <a 
@@ -284,7 +298,7 @@ export default function Skills() {
                             onClick={(e) => e.stopPropagation()}
                             title="Buka keabsahan sertifikat di website penerbit"
                           >
-                            <ExternalLink size={12} />
+                            <ExternalLink size={13} />
                             <span>BUKTI LINK ↗</span>
                           </a>
                         )}
