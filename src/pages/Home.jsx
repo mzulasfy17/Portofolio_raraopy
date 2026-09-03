@@ -2,25 +2,34 @@ import React from 'react';
 import Window from '../components/Window';
 import Typewriter from '../components/Typewriter';
 import { GmailIcon } from '../components/BrandIcons';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import { 
   User, 
   Briefcase, 
   Award, 
   Monitor, 
-  Target, 
-  BarChart3, 
   GraduationCap, 
   CheckCircle2,
   Download,
   FileText,
   Send,
-  Mail,
   MapPin
 } from 'lucide-react';
 import './Home.css';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
 
 export default function Home({ onNavigate }) {
+  const { experiences, skillCategories, profile } = usePortfolioData();
+
+  const taglineText = profile?.tagline || "Management & HR Specialist ✨";
+  const bioText = profile?.bio || "Halo! Saya Rahma Novridayanti, S.M., seorang lulusan Fresh Graduate Manajemen yang berdedikasi tinggi dalam mengoptimalkan pengelolaan sumber daya manusia, strategi pemasaran digital, dan efisiensi operasional bisnis.";
+  const specialties = profile?.specialties || [
+    'Human Capital Management',
+    'Digital Marketing Strategy',
+    'Data & Operations Analysis',
+    'Fresh Grad Manajemen (S.M.)'
+  ];
+
   return (
     <div className="home-container">
       {/* LEFT COLUMN: WELCOME & AVATAR CARD */}
@@ -40,32 +49,22 @@ export default function Home({ onNavigate }) {
             </div>
 
             <div className="typewriter-badge">
-              &gt; <Typewriter text="Management & HR Specialist ✨" speed={70} delay={500} />
+              &gt; <Typewriter text={taglineText} speed={70} delay={500} />
             </div>
 
             <div className="specialty-list">
-              <div className="specialty-item">
-                <FileText size={16} color="#9333ea" />
-                <span>Human Capital Management</span>
-              </div>
-              <div className="specialty-item">
-                <Target size={16} color="#7e22ce" />
-                <span>Digital Marketing Strategy</span>
-              </div>
-              <div className="specialty-item">
-                <BarChart3 size={16} color="#a855f7" />
-                <span>Data & Operations Analysis</span>
-              </div>
-              <div className="specialty-item">
-                <GraduationCap size={16} color="#6b21a8" />
-                <span>Fresh Grad Manajemen (S.M.)</span>
-              </div>
+              {specialties.map((item, idx) => (
+                <div key={idx} className="specialty-item">
+                  <FileText size={16} color="#9333ea" />
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
 
             {/* DOWNLOAD CV BUTTON */}
             <div className="download-cv-container">
               <a 
-                href="\public\CV_Rahma_Novridayanti.pdf" 
+                href={profile?.cvUrl || "/CV_Rahma_Novridayanti.pdf"} 
                 download="CV_Rahma_Novridayanti.pdf" 
                 className="download-cv-btn"
                 title="Download Full Curriculum Vitae PDF"
@@ -98,23 +97,7 @@ export default function Home({ onNavigate }) {
 
             <p className="about-paragraph">
               <span className="prompt-symbol">&gt;</span>
-              <span>
-                Halo! Saya <strong>Rahma Novridayanti, S.M.</strong>, seorang lulusan Fresh Graduate Manajemen yang berdedikasi tinggi dalam mengoptimalkan pengelolaan sumber daya manusia, strategi pemasaran digital, dan efisiensi operasional bisnis.
-              </span>
-            </p>
-
-            <p className="about-paragraph">
-              <span className="prompt-symbol">&gt;</span>
-              <span>
-                Memiliki pemahaman kuat mengenai Human Resource Information System (HRIS), manajemen talenta, analisis data bisnis menggunakan SPSS & Excel, serta strategi komunikasi pemasaran yang efektif.
-              </span>
-            </p>
-
-            <p className="about-paragraph">
-              <span className="prompt-symbol">&gt;</span>
-              <span>
-                Saya bersemangat untuk terus belajar, beradaptasi dengan tantangan baru, dan memberikan kontribusi nyata dalam pengembangan organisasi maupun perusahaan tempat saya bekerja.
-              </span>
+              <span>{bioText}</span>
             </p>
 
             <div className="about-tags">
@@ -129,9 +112,10 @@ export default function Home({ onNavigate }) {
         {/* EXPERIENCE WINDOW */}
         <Window title="EXPERIENCE.EXE" icon={Briefcase} theme="purple">
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.9rem', color: '#581c87', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                💼 EXPERIENCE
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.88rem', color: '#581c87', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Briefcase size={16} color="#581c87" />
+                <span>RECENT EXPERIENCE</span>
               </h3>
               <button 
                 className="pixel-btn"
@@ -141,27 +125,23 @@ export default function Home({ onNavigate }) {
               </button>
             </div>
 
-            <div className="experience-item">
-              <div className="experience-year-badge">2025</div>
-              <div>
-                <div className="experience-role">PT. FITRA WIKA </div>
-                <div className="experience-company">Intern</div>
-                <div className="experience-desc">
-                  Membantu proses administrasi keuangan, termasuk pencatatan transaksi harian dan pengarsipan dokumen. 
-                </div>
-              </div>
-            </div>
+            {experiences.slice(0, 2).map((item) => {
+              const displayTitle = item.company || item.role;
+              const displaySubtitle = item.role || item.company;
+              const displayDesc = (item.bullets && item.bullets[0]) || item.description || item.location;
+              const badgeText = item.period ? item.period.replace(' - ', ' -\n') : '2025';
 
-            <div className="experience-item">
-              <div className="experience-year-badge">2024</div>
-              <div>
-                <div className="experience-role">Himpunan Mahasiswa Manajemen</div>
-                <div className="experience-company">Head of Public Relations & Event Manager</div>
-                <div className="experience-desc">
-                  Memimpin koordinasi komunikasi publik, mengelola kemitraan media, dan sukses menyelenggarakan Seminar Nasional Karir dengan 300+ peserta.
+              return (
+                <div key={item.id} className="experience-item">
+                  <div className="experience-year-badge">{badgeText}</div>
+                  <div>
+                    <div className="experience-role">{displayTitle}</div>
+                    <div className="experience-company">{displaySubtitle}</div>
+                    <div className="experience-desc">{displayDesc}</div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </Window>
 
@@ -184,14 +164,9 @@ export default function Home({ onNavigate }) {
               </div>
 
               <div className="skills-pills">
-                <span className="skill-chip">📊 Microsoft Excel</span>
-                <span className="skill-chip">📈 SPSS Analysis</span>
-                <span className="skill-chip">👥 HRIS System</span>
-                <span className="skill-chip">🎯 Digital Marketing</span>
-                <span className="skill-chip">🎨 Canva & Branding</span>
-                <span className="skill-chip">🎤 Public Speaking</span>
-                <span className="skill-chip">⚙️ Operations</span>
-                <span className="skill-chip">💼 Talent Acquisition</span>
+                {skillCategories.flatMap(cat => cat.pills || []).slice(0, 8).map((pill, idx) => (
+                  <span key={idx} className="skill-chip">✨ {pill}</span>
+                ))}
               </div>
             </div>
           </Window>
@@ -205,7 +180,7 @@ export default function Home({ onNavigate }) {
                 </div>
                 <div className="status-card-content">
                   <div className="status-card-label">LOCATION</div>
-                  <div className="status-card-value">Pekanbaru, Indonesia</div>
+                  <div className="status-card-value">{profile?.location || "Pekanbaru, Indonesia"}</div>
                 </div>
               </div>
 
@@ -268,7 +243,7 @@ export default function Home({ onNavigate }) {
                 LET'S TALK NOW ↗
               </button>
               <a 
-                href="mailto:rahma.novridayanti25@gmail.com" 
+                href={`mailto:${profile?.email || 'rahma.novridayanti25@gmail.com'}`} 
                 className="quest-btn-secondary"
               >
                 <GmailIcon size={14} />

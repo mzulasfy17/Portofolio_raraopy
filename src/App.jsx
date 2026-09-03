@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Experience from './pages/Experience';
 import Skills from './pages/Skills';
 import Contact from './pages/Contact';
+import Admin from './pages/Admin';
 import './App.css';
 
 export default function App() {
@@ -28,6 +29,8 @@ export default function App() {
         return <Skills />;
       case 'contact':
         return <Contact />;
+      case 'admin':
+        return <Admin />;
       default:
         return <Home onNavigate={handleTabChange} />;
     }
@@ -50,8 +53,8 @@ export default function App() {
         </PageTransition>
       </main>
 
-      {/* 4. Footer with replay intro option */}
-      <Footer onReplayIntro={() => setShowSplash(true)} />
+      {/* 4. Footer with replay intro option & Admin link */}
+      <Footer onReplayIntro={() => setShowSplash(true)} onOpenAdmin={() => handleTabChange('admin')} />
     </div>
   );
 }

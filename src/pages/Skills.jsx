@@ -5,6 +5,7 @@ import avatarImg from '../assets/images/rahma-avatar.jpg';
 import certBnspImg from '../assets/images/cert_bnsp.jpg';
 import certMySkillImg from '../assets/images/cert_myskill.jpg';
 import certDicodingImg from '../assets/images/cert_dicoding.jpg';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import { 
   Award, 
   MapPin, 
@@ -18,8 +19,6 @@ import {
   MessageSquare,
   Clock,
   RefreshCw,
-  FileCheck2,
-  FolderGit2,
   Eye,
   ExternalLink
 } from 'lucide-react';
@@ -27,29 +26,21 @@ import './Skills.css';
 
 export default function Skills() {
   const [selectedCert, setSelectedCert] = useState(null);
+  const { skillCategories, certificates } = usePortfolioData();
 
-  const techCategories = [
-    {
-      title: 'DATA & MANAGEMENT TOOLS',
-      icon: Monitor,
-      pills: ['Microsoft Excel (Advanced)', 'SPSS Statistics', 'HRIS System', 'Power BI', 'Canva Pro']
-    },
-    {
-      title: 'HUMAN CAPITAL & HR',
-      icon: Users,
-      pills: ['Talent Acquisition', 'Performance Mgmt', 'Employee Relations', 'Training & Dev']
-    },
-    {
-      title: 'DIGITAL MARKETING',
-      icon: Target,
-      pills: ['Social Media Strategy', 'Content Creation', 'Copywriting', 'Instagram/TikTok Ads']
-    },
-    {
-      title: 'BUSINESS OPERATIONS',
-      icon: BarChart3,
-      pills: ['Project Operations', 'Financial Admin', 'Event Planning', 'CMS System', 'Public Relations']
-    }
-  ];
+  const getCategoryIcon = (index) => {
+    const icons = [Monitor, Users, Target, BarChart3];
+    return icons[index % icons.length];
+  };
+
+  const getCertImage = (cert) => {
+    if (cert.imageUrl) return cert.imageUrl;
+    if (cert.image) return cert.image;
+    if (cert.imageKey === 'certBnspImg' || cert.id === 'cert-1' || cert.certId === 'CERT-KARIRNEXT-01') return certBnspImg;
+    if (cert.imageKey === 'certMySkillImg' || cert.id === 'cert-2' || cert.certId === 'CERT-MYSKILL-02') return certMySkillImg;
+    if (cert.imageKey === 'certDicodingImg' || cert.id === 'cert-3' || cert.certId === 'CERT-DICODING-03') return certDicodingImg;
+    return certBnspImg;
+  };
 
   const personalSkills = [
     {
@@ -79,48 +70,12 @@ export default function Skills() {
     }
   ];
 
-  const certificates = [
-    {
-      id: 'CERT-KARIRNEXT-01',
-      title: 'Sertifikasi Microsoft Office Excel, Word & Power Point Specialist',
-      issuer: 'KarirNex / PT Ebiz Karisma Internasional • 2026',
-      credentialId: 'rig1xRo',
-      icon: Award,
-      image: certBnspImg,
-      credentialUrl: 'https://karirnex.com/c/rig1xRo',
-      description: 'Sertifikasi resmi kompetensi nasional dalam mengelola sumber daya manusia, perencanaan tenaga kerja, rekrutmen, serta pengoperasian sistem HRIS perusahaan.',
-      skills: ['HRIS Management', 'Talent Acquisition', 'Employee Performance', 'Workplace Relations']
-    },
-    {
-      id: 'CERT-MYSKILL-02',
-      title: 'Mastering Excel Data Analysis & SPSS',
-      issuer: 'MySkill Intensive Bootcamp • 2024',
-      credentialId: 'MYSKILL-EXCEL-SPSS-7714',
-      icon: FileCheck2,
-      image: certMySkillImg,
-      credentialUrl: 'https://myskill.id/',
-      description: 'Pelatihan intensif analisis data kuantitatif menggunakan fitur advanced Microsoft Excel (PivotTable, VLOOKUP/XLOOKUP, Dynamic Charts) serta uji hipotesis regresi dengan SPSS.',
-      skills: ['Advanced Excel', 'SPSS Hypothesis Testing', 'Data Cleaning', 'Business Analytics']
-    },
-    {
-      id: 'CERT-DICODING-03',
-      title: 'Digital Marketing & Content Strategy',
-      issuer: 'Dicoding Indonesia • 2024',
-      credentialId: 'DICODING-DM-2024-3329',
-      icon: FolderGit2,
-      image: certDicodingImg,
-      credentialUrl: 'https://www.dicoding.com/',
-      description: 'Kelulusan program strategi pemasaran digital, analisis audiens media sosial, perencanaan konten kreatif, copywriting promosi, serta manajemen kampanye iklan.',
-      skills: ['Social Media Strategy', 'Copywriting', 'Content Planning', 'Instagram & TikTok Ads']
-    }
-  ];
-
   return (
     <div className="skills-container">
       {/* Certificate Modal Lightbox */}
       {selectedCert && (
         <CertificateModal 
-          cert={selectedCert} 
+          cert={{ ...selectedCert, image: getCertImage(selectedCert) }} 
           onClose={() => setSelectedCert(null)} 
         />
       )}
@@ -207,16 +162,16 @@ export default function Skills() {
           {/* KEAHLIAN TEKNIS */}
           <Window title="KEAHLIAN TEKNIS" icon={Monitor} tags={['TECHNICAL SKILLS 💻']} theme="purple">
             <div className="tech-skills-grid">
-              {techCategories.map((cat, idx) => {
-                const IconComp = cat.icon;
+              {skillCategories.map((cat, idx) => {
+                const IconComp = getCategoryIcon(idx);
                 return (
-                  <div key={idx} className="tech-skill-card">
+                  <div key={cat.id || idx} className="tech-skill-card">
                     <div className="tech-skill-header">
                       <IconComp size={16} color="#7e22ce" />
                       <span>{cat.title}</span>
                     </div>
                     <div className="tech-pill-list">
-                      {cat.pills.map((pill, pIdx) => (
+                      {(cat.pills || []).map((pill, pIdx) => (
                         <span key={pIdx} className="tech-pill">
                           {pill}
                         </span>
@@ -250,6 +205,7 @@ export default function Skills() {
           <Window title="SERTIFIKAT PELATIHAN" icon={Award} tags={['GAMBAR & LINK BUKTI 📜']} theme="purple">
             <div className="cert-cards-row">
               {certificates.map((cert) => {
+                const certImage = getCertImage(cert);
                 return (
                   <div 
                     key={cert.id} 
@@ -265,7 +221,7 @@ export default function Skills() {
                       }}
                     >
                       <img 
-                        src={cert.image} 
+                        src={certImage} 
                         alt={cert.title} 
                         className="cert-thumb-img" 
                       />

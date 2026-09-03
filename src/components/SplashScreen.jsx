@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Play, Terminal } from 'lucide-react';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
 import catImg from '../assets/images/pixel_grey_kitty.png';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import './SplashScreen.css';
 
 export default function SplashScreen({ onComplete }) {
@@ -9,15 +10,25 @@ export default function SplashScreen({ onComplete }) {
   const [bootText, setBootText] = useState('SYSTEM BOOTING...');
   const [isClosing, setIsClosing] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const { intro } = usePortfolioData();
+
+  const defaultLogs = [
+    '> INITIALIZING RAHMA OS v2.0...',
+    '> LOADING HR & MANAGEMENT MODULES...',
+    '> LOADING DIGITAL MARKETING STRATEGIES...',
+    '> MOUNTING PIXEL GRAPHICS & CAT ASSISTANT...',
+    '> SYSTEM READY! WELCOME TO MY PORTFOLIO! ✨'
+  ];
+
+  const rawLogs = (intro?.bootLogLines && intro.bootLogLines.length > 0) 
+    ? intro.bootLogLines 
+    : defaultLogs;
 
   useEffect(() => {
-    const bootSteps = [
-      { pct: 15, text: '> INITIALIZING RAHMA OS v2.0...' },
-      { pct: 35, text: '> LOADING HR & MANAGEMENT MODULES...' },
-      { pct: 60, text: '> LOADING DIGITAL MARKETING STRATEGIES...' },
-      { pct: 85, text: '> MOUNTING PIXEL GRAPHICS & CAT ASSISTANT...' },
-      { pct: 100, text: '> SYSTEM READY! WELCOME TO MY PORTFOLIO! ✨' }
-    ];
+    const bootSteps = rawLogs.map((text, idx) => ({
+      pct: Math.round(((idx + 1) / rawLogs.length) * 100),
+      text: text.startsWith('>') ? text : `> ${text}`
+    }));
 
     let currentStep = 0;
     const interval = setInterval(() => {
@@ -31,20 +42,23 @@ export default function SplashScreen({ onComplete }) {
         setIsReady(true);
         // Auto proceed after short delay
         setTimeout(() => {
-          handleEnter();
+          setIsClosing(true);
+          setTimeout(() => {
+            onComplete();
+          }, 600);
         }, 800);
       }
     }, 380);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [rawLogs, onComplete]);
 
   const handleEnter = () => {
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       onComplete();
-    }, 600); // match curtain transition time
+    }, 600);
   };
 
   return (
@@ -73,15 +87,15 @@ export default function SplashScreen({ onComplete }) {
             </div>
             <div className="splash-badge">
               <Sparkles size={12} />
-              <span>S1 MANAJEMEN • HR & MARKETING</span>
+              <span>{intro?.badge || 'S1 MANAJEMEN • HR & MARKETING'}</span>
             </div>
           </div>
 
           {/* Welcome Heading */}
           <h1 className="splash-title">
-            RAHMA NOVRIDAYANTI
+            {intro?.title || 'RAHMA NOVRIDAYANTI'}
           </h1>
-          <p className="splash-subtitle">PORTFOLIO.EXE 🌟</p>
+          <p className="splash-subtitle">{intro?.subtitle || 'PORTFOLIO.EXE 🌟'}</p>
 
           {/* Boot Terminal Log */}
           <div className="splash-terminal">

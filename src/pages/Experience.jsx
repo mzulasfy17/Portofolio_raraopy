@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Window from '../components/Window';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import { 
   Briefcase, 
   GraduationCap, 
@@ -11,8 +12,6 @@ import {
   MapPin, 
   Building2, 
   Star,
-  Award,
-  BookOpen,
   User,
   FileText
 } from 'lucide-react';
@@ -20,73 +19,22 @@ import './Experience.css';
 
 export default function Experience() {
   const [activeCategory, setActiveCategory] = useState('all');
+  const { experiences } = usePortfolioData();
 
-  const experiences = [
-    {
-      id: 1,
-      category: 'education',
-      badgeLabel: 'EDUCATION',
-      role: 'S1 Manajemen (Sarjana Manajemen)',
-      company: 'UIN Sultan Syarif Kasim Riau',
-      period: '2022 - 2026',
-      location: 'Pekanbaru, Indonesia',
-      icon: GraduationCap,
-      bullets: [
-        'Mempelajari manajemen operasional, Human Resource Management, strategi pemasaran digital, dan analisis bisnis kuantitatif.',
-        'Aktif dalam berbagai praktikum studi kasus bisnis, penelitian data SPSS, serta kepemimpinan organisasi mahasiswa.',
-        'Meraih predikat IPK 3.59 / 4.00 dengan konsentrasi Manajemen Keuangan.'
-      ],
-      skills: ['HR Management', 'SPSS Analysis', 'Digital Marketing', 'Business Operations', 'Public Speaking']
-    },
-    {
-      id: 2,
-      category: 'internship',
-      badgeLabel: 'INTERNSHIP',
-      role: 'Intern',
-      company: 'PT. FITRA WIKA ',
-      period: 'Feb 2025 - April 2025',
-      location: 'Pekanbaru, Indonesia',
-      icon: Briefcase,
-      bullets: [
-        'Mendukung tim keuangan dalam pengelolaan dan penyusunan laporan keuangan bulanan.',
-        'Membantu proses administrasi keuangan, termasuk pencatatan transaksi harian dan pengarsipan dokumen.',
-        'Melakukan analisis sederhana terhadap laporan keuangan untuk mendukung pengambilan keputusan manajerial.',
-        'Berkontribusi dalam koordinasi internal tim dan komunikasi lintas departemen untuk kelancaran operasional administrasi.'
-      ],
-      skills: ['UAT Testing', 'Digital Banking', 'CMS System', 'Data Entry', 'Financial Admin']
-    },
-    {
-      id: 3,
-      category: 'organization',
-      badgeLabel: 'ORGANIZATION',
-      role: 'Head of Public Relations & Event Manager',
-      company: 'Himpunan Mahasiswa Manajemen',
-      period: '2023 - 2024',
-      location: 'UIN Sultan Syarif Kasim Riau',
-      icon: Users,
-      bullets: [
-        'Memimpin tim Humas dalam publikasi media sosial, strategi branding kegiatan, dan pengelolaan kanal komunikasi publik.',
-        'Mengatur kemitraan sponsor dan media partner untuk penyelenggaraan Seminar Nasional Karir & Business Plan.',
-        'Memimpin pelaksanaan event nasional dengan partisipasi antusias lebih dari 300+ peserta mahasiswa.'
-      ],
-      skills: ['Event Management', 'Public Relations', 'Sponsorship', 'Team Leadership', 'Branding']
-    },
-    {
-      id: 4,
-      category: 'project',
-      badgeLabel: 'PROJECT & FREELANCE',
-      role: 'Digital Content & Brand Strategist',
-      company: 'Independent Partner / UMKM Project',
-      period: '2024 - Present',
-      location: 'Pekanbaru, Indonesia',
-      icon: Sparkles,
-      bullets: [
-        'Merancang strategi kampanye digital di media sosial Instagram & TikTok untuk meningkatkan awareness UMKM lokal.',
-        'Membuat desain konten visual Canva, copywriting promosi, dan evaluasi impresi mingguan performa akun.'
-      ],
-      skills: ['Canva Design', 'Copywriting', 'Social Media Strategy', 'Content Planning']
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'education': return GraduationCap;
+      case 'internship': return Briefcase;
+      case 'organization': return Users;
+      case 'project': return Sparkles;
+      default: return Briefcase;
     }
-  ];
+  };
+
+  const getCategoryCount = (cat) => {
+    if (cat === 'all') return experiences.length;
+    return experiences.filter(exp => exp.category === cat).length;
+  };
 
   const filteredExperiences = activeCategory === 'all'
     ? experiences
@@ -185,7 +133,7 @@ export default function Experience() {
                   >
                     <LayoutGrid size={14} color={activeCategory === 'all' ? '#fff' : '#7e22ce'} />
                     <span>All Experience</span>
-                    <span className="cat-btn-badge">{experiences.length}</span>
+                    <span className="cat-btn-badge">{getCategoryCount('all')}</span>
                   </button>
 
                   <button 
@@ -194,7 +142,7 @@ export default function Experience() {
                   >
                     <GraduationCap size={14} color={activeCategory === 'education' ? '#fff' : '#7e22ce'} />
                     <span>Education</span>
-                    <span className="cat-btn-badge">1</span>
+                    <span className="cat-btn-badge">{getCategoryCount('education')}</span>
                   </button>
 
                   <button 
@@ -203,7 +151,7 @@ export default function Experience() {
                   >
                     <Briefcase size={14} color={activeCategory === 'internship' ? '#fff' : '#7e22ce'} />
                     <span>Internship</span>
-                    <span className="cat-btn-badge">1</span>
+                    <span className="cat-btn-badge">{getCategoryCount('internship')}</span>
                   </button>
 
                   <button 
@@ -212,7 +160,7 @@ export default function Experience() {
                   >
                     <Users size={14} color={activeCategory === 'organization' ? '#fff' : '#7e22ce'} />
                     <span>Organization</span>
-                    <span className="cat-btn-badge">1</span>
+                    <span className="cat-btn-badge">{getCategoryCount('organization')}</span>
                   </button>
 
                   <button 
@@ -221,12 +169,11 @@ export default function Experience() {
                   >
                     <Sparkles size={14} color={activeCategory === 'project' ? '#fff' : '#7e22ce'} />
                     <span>Project & Freelance</span>
-                    <span className="cat-btn-badge">1</span>
+                    <span className="cat-btn-badge">{getCategoryCount('project')}</span>
                   </button>
                 </div>
               </div>
             </div>
-
 
             {/* 4. NOTE WINDOW */}
             <div className="exp-card-window">
@@ -260,7 +207,7 @@ export default function Experience() {
             ) : (
               <div className="timeline-list">
                 {filteredExperiences.map((item) => {
-                  const IconComp = item.icon;
+                  const IconComp = item.icon || getCategoryIcon(item.category);
                   return (
                     <div key={`${item.id}-${activeCategory}`} className="exp-card-item">
                       <div className="timeline-bullet" />
@@ -277,7 +224,7 @@ export default function Experience() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
                               <h3 className="exp-card-role-title">{item.role}</h3>
                               <span className="exp-card-cat-badge">
-                                🐾 {item.badgeLabel}
+                                🐾 {item.badgeLabel || item.category?.toUpperCase()}
                               </span>
                             </div>
                             <div className="exp-card-company">
@@ -289,14 +236,14 @@ export default function Experience() {
 
                         {/* Bullet achievements */}
                         <ul className="exp-card-bullets">
-                          {item.bullets.map((point, idx) => (
+                          {(item.bullets || []).map((point, idx) => (
                             <li key={idx}>{point}</li>
                           ))}
                         </ul>
 
                         {/* Skill Pills */}
                         <div className="exp-card-tags">
-                          {item.skills.map((skill, idx) => (
+                          {(item.skills || []).map((skill, idx) => (
                             <span key={idx} className="exp-card-tag-item">
                               {skill}
                             </span>

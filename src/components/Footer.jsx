@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GmailIcon, LinkedInIcon } from './BrandIcons';
 import './Footer.css';
 
-export default function Footer({ onReplayIntro }) {
+export default function Footer({ onReplayIntro, onOpenAdmin }) {
   const [time, setTime] = useState('');
 
   useEffect(() => {
@@ -15,6 +15,18 @@ export default function Footer({ onReplayIntro }) {
     return () => clearInterval(timer);
   }, []);
 
+  // Secret keyboard shortcut: Ctrl + Shift + A or Alt + A to open admin
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') || (e.altKey && e.key.toLowerCase() === 'a')) {
+        e.preventDefault();
+        if (onOpenAdmin) onOpenAdmin();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpenAdmin]);
+
   return (
     <div className="footer-wrapper">
       <footer className="footer-container">
@@ -24,7 +36,6 @@ export default function Footer({ onReplayIntro }) {
             <div className="footer-brand-title">
               <span>RAHMA NOVRIDAYANTI</span>
               <span style={{ fontSize: '0.75rem', color: '#c084fc' }}>| PORTFOLIO.EXE</span>
-              <span>🐾</span>
             </div>
             <div className="footer-brand-sub">
               MANAGEMENT & HR SPECIALIST • PEKANBARU, INDONESIA
@@ -54,7 +65,15 @@ export default function Footer({ onReplayIntro }) {
         {/* Bottom Row: Copyright & Status */}
         <div className="footer-bottom-row">
           <div className="footer-copyright">
-            © 2026 RAHMA NOVRIDAYANTI. ALL RIGHTS RESERVED. 🐾
+            © 2026 RAHMA NOVRIDAYANTI. ALL RIGHTS RESERVED. 
+            {/* Secret Admin Button: Cat Paw Print Icon 🐾 */}
+            <span 
+              style={{ cursor: 'pointer', marginLeft: '6px', userSelect: 'none' }}
+              onClick={onOpenAdmin}
+              title="Secret Admin Access 🐾"
+            >
+              🐾
+            </span>
           </div>
 
           <div className="footer-status-box">
