@@ -15,10 +15,11 @@ const ICON_MAP = {
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { navbar } = usePortfolioData();
+  const { navbar, profile } = usePortfolioData();
 
   const title = navbar?.title || 'RAHMA NOVRIDAYANTI';
   const subtitle = navbar?.subtitle || 'PORTFOLIO.EXE 🌟';
+  const avatarSrc = profile?.avatarUrl || avatarImg;
 
   const defaultItems = [
     { id: 'home', label: 'HOME', icon: 'Home', visible: true },
@@ -40,7 +41,11 @@ export default function Navbar({ activeTab, setActiveTab }) {
       <div className="navbar-top-bar">
         <div className="navbar-brand" onClick={() => handleNavClick('home')}>
           <div className="navbar-avatar-box">
-            <img src={avatarImg} alt={title} />
+            <img 
+              src={avatarSrc} 
+              alt={title} 
+              onError={(e) => { e.currentTarget.src = avatarImg; }}
+            />
           </div>
           <div>
             <h1 className="navbar-title">{title}</h1>

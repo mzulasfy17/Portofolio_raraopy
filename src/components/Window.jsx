@@ -27,42 +27,63 @@ export default function Window({ title, icon: Icon, tags = [], children, classNa
       boxShadow: isPurple ? '4px 4px 0px rgba(107, 33, 168, 0.2)' : 'var(--pixel-shadow)'
     }}>
       {/* Window Header */}
-      <div style={{
+      <div className="pixel-window-header" style={{
         background: headerBg,
         padding: '8px 12px',
         borderBottom: headerBorder,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderTopLeftRadius: '6px',
-        borderTopRightRadius: '6px'
+        borderTopLeftRadius: '5px',
+        borderTopRightRadius: '5px',
+        gap: '8px',
+        overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {Icon && <Icon size={16} color={iconColor} />}
+        {/* Title Group */}
+        <div className="pixel-window-title-group" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          minWidth: 0, 
+          flex: '1 1 auto',
+          overflow: 'hidden'
+        }}>
+          {Icon && <Icon size={16} color={iconColor} style={{ flexShrink: 0 }} />}
           <span style={{
             fontFamily: "var(--font-pixel-sub)",
             fontSize: '0.75rem',
             fontWeight: 'bold',
             color: titleColor,
-            letterSpacing: '1px',
-            textTransform: 'uppercase'
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
           }}>
             {title}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Actions & Tags Group */}
+        <div className="pixel-window-actions-group" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px',
+          flexShrink: 0
+        }}>
           {tags.length > 0 && (
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div className="pixel-window-tags-container" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               {tags.map((tag, idx) => (
-                <span key={idx} style={{
+                <span key={idx} className="pixel-window-tag-badge" style={{
                   fontFamily: "var(--font-pixel-sub)",
                   fontSize: '0.55rem',
                   padding: '2px 6px',
                   background: tagBg,
                   border: tagBorder,
                   color: tagColor,
-                  borderRadius: '3px'
+                  borderRadius: '4px',
+                  whiteSpace: 'nowrap',
+                  display: 'inline-block'
                 }}>
                   {tag}
                 </span>

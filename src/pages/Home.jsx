@@ -37,7 +37,11 @@ export default function Home({ onNavigate }) {
         <Window title="WELCOME.EXE" icon={Monitor} tags={['• PROFILE MODE 🌟']} theme="purple">
           <div className="welcome-card-content">
             <div className="avatar-frame">
-              <img src={avatarImg} alt="Rahma Novridayanti Pixel Portrait" />
+              <img 
+                src={profile?.avatarUrl || avatarImg} 
+                alt="Rahma Novridayanti Pixel Portrait" 
+                onError={(e) => { e.currentTarget.src = avatarImg; }}
+              />
               <div className="avatar-badge">● PROFILE 🌟</div>
             </div>
 

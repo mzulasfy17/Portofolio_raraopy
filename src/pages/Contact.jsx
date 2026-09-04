@@ -3,6 +3,7 @@ import Window from '../components/Window';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
 import mailboxImg from '../assets/images/purple_cat_mailbox.jpg';
 import { GmailIcon, LinkedInIcon } from '../components/BrandIcons';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import emailjs from '@emailjs/browser';
 import { 
   MapPin, 
@@ -16,6 +17,7 @@ import {
 import './Contact.css';
 
 export default function Contact() {
+  const { profile } = usePortfolioData();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -197,9 +199,10 @@ const handleSubmit = async (e) => {
             <div className="profile-card-body">
               <div className="profile-avatar-frame">
                 <img 
-                  src={avatarImg} 
+                  src={profile?.avatarUrl || avatarImg} 
                   alt="Rahma Novridayanti Pixel Portrait" 
                   className="profile-avatar-img" 
+                  onError={(e) => { e.currentTarget.src = avatarImg; }}
                 />
                 <div className="skills-avatar-badge">● PROFILE 🌟</div>
               </div>

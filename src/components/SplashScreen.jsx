@@ -7,10 +7,11 @@ import './SplashScreen.css';
 
 export default function SplashScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
-  const [bootText, setBootText] = useState('SYSTEM BOOTING...');
+  const [currentLogIndex, setCurrentLogIndex] = useState(0);
+  const [bootText, setBootText] = useState('');
   const [isClosing, setIsClosing] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const { intro } = usePortfolioData();
+  const { intro, profile } = usePortfolioData();
 
   const defaultLogs = [
     '> INITIALIZING RAHMA OS v2.0...',
@@ -82,7 +83,12 @@ export default function SplashScreen({ onComplete }) {
           {/* Animated Avatar / Cat Frame */}
           <div className="splash-avatar-container">
             <div className="splash-avatar-box">
-              <img src={avatarImg} alt="Rahma Novridayanti" className="splash-avatar-img" />
+              <img 
+                src={profile?.avatarUrl || avatarImg} 
+                alt="Rahma Novridayanti" 
+                className="splash-avatar-img" 
+                onError={(e) => { e.currentTarget.src = avatarImg; }}
+              />
               <img src={catImg} alt="Pixel Kitty" className="splash-cat-sprite" />
             </div>
             <div className="splash-badge">

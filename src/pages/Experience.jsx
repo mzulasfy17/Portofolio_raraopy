@@ -19,7 +19,7 @@ import './Experience.css';
 
 export default function Experience() {
   const [activeCategory, setActiveCategory] = useState('all');
-  const { experiences = [], projects = [] } = usePortfolioData();
+  const { experiences = [], projects = [], profile } = usePortfolioData();
 
   // Normalize project items from projects collection to fit experience timeline shape
   const normalizedProjects = projects.map((proj, idx) => ({
@@ -91,9 +91,10 @@ export default function Experience() {
               <div className="exp-card-body" style={{ textAlign: 'center' }}>
                 <div className="exp-avatar-frame">
                   <img 
-                    src={avatarImg} 
+                    src={profile?.avatarUrl || avatarImg} 
                     alt="Rahma Pixel Portrait" 
                     className="exp-avatar-img" 
+                    onError={(e) => { e.currentTarget.src = avatarImg; }}
                   />
                   <div className="skills-avatar-badge">● PROFILE 🌟</div>
                 </div>

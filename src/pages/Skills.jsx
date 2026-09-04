@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import Window from '../components/Window';
-import CertificateModal from '../components/CertificateModal';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
-import certBnspImg from '../assets/images/cert_bnsp.jpg';
-import certMySkillImg from '../assets/images/cert_myskill.jpg';
-import certDicodingImg from '../assets/images/cert_dicoding.jpg';
 import { usePortfolioData } from '../hooks/usePortfolioData';
 import { 
   Award, 
@@ -19,27 +15,28 @@ import {
   MessageSquare,
   Clock,
   RefreshCw,
-  Eye,
-  ExternalLink
+  ExternalLink,
+  Info,
+  X,
+  ShieldCheck
 } from 'lucide-react';
 import './Skills.css';
 
+const formatExternalUrl = (url) => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('//') || trimmed.startsWith('/') || trimmed.startsWith('mailto:')) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
 export default function Skills() {
-  const [selectedCert, setSelectedCert] = useState(null);
-  const { skillCategories, certificates } = usePortfolioData();
+  const { skillCategories, certificates, profile } = usePortfolioData();
 
   const getCategoryIcon = (index) => {
     const icons = [Monitor, Users, Target, BarChart3];
     return icons[index % icons.length];
-  };
-
-  const getCertImage = (cert) => {
-    if (cert.imageUrl) return cert.imageUrl;
-    if (cert.image) return cert.image;
-    if (cert.imageKey === 'certBnspImg' || cert.id === 'cert-1' || cert.certId === 'CERT-KARIRNEXT-01') return certBnspImg;
-    if (cert.imageKey === 'certMySkillImg' || cert.id === 'cert-2' || cert.certId === 'CERT-MYSKILL-02') return certMySkillImg;
-    if (cert.imageKey === 'certDicodingImg' || cert.id === 'cert-3' || cert.certId === 'CERT-DICODING-03') return certDicodingImg;
-    return certBnspImg;
   };
 
   const personalSkills = [
@@ -72,14 +69,6 @@ export default function Skills() {
 
   return (
     <div className="skills-container">
-      {/* Certificate Modal Lightbox */}
-      {selectedCert && (
-        <CertificateModal 
-          cert={{ ...selectedCert, image: getCertImage(selectedCert) }} 
-          onClose={() => setSelectedCert(null)} 
-        />
-      )}
-
       <div className="skills-layout">
         {/* LEFT SIDEBAR */}
         <aside className="skills-sidebar">
@@ -95,9 +84,10 @@ export default function Skills() {
             <div className="skills-photo-body">
               <div className="skills-avatar-frame">
                 <img 
-                  src={avatarImg} 
+                  src={profile?.avatarUrl || avatarImg} 
                   alt="Rahma Pixel Portrait" 
                   className="skills-avatar-img" 
+                  onError={(e) => { e.currentTarget.src = avatarImg; }}
                 />
                 <div className="skills-avatar-badge">● PROFILE 🌟</div>
               </div>
@@ -201,65 +191,44 @@ export default function Skills() {
             </div>
           </Window>
 
-          {/* SERTIFIKAT PELATIHAN (GAMBAR & LINK PENERBIT) */}
-          <Window title="SERTIFIKAT PELATIHAN" icon={Award} tags={['GAMBAR & LINK BUKTI 📜']} theme="purple">
+          {/* SERTIFIKAT PELATIHAN & LISENSI */}
+          <Window title="SERTIFIKAT PELATIHAN" icon={Award} tags={['VERIFIKASI LINK 📜']} theme="purple">
             <div className="cert-cards-row">
               {certificates.map((cert) => {
-                const certImage = getCertImage(cert);
+                const linkUrl = formatExternalUrl(cert.credentialUrl);
                 return (
-                  <div 
-                    key={cert.id} 
-                    className="cert-card-item clickable-cert"
-                    onClick={() => setSelectedCert(cert)}
-                    title={`Klik untuk lihat dokumen ${cert.title}`}
-                  >
-                    <div 
-                      className="cert-thumb-frame"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCert(cert);
-                      }}
-                    >
-                      <img 
-                        src={certImage} 
-                        alt={cert.title} 
-                        className="cert-thumb-img" 
-                      />
-                    </div>
-                    
-                    <div className="cert-text-content">
-                      <div className="cert-title">{cert.title}</div>
-                      <div className="cert-issuer">{cert.issuer}</div>
-                      
-                      <div className="cert-action-row">
-                        <button 
-                          type="button"
-                          className="cert-preview-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedCert(cert);
-                          }}
-                          title="Buka pratinjau gambar sertifikat"
-                        >
-                          <Eye size={13} />
-                          <span>LIHAT GAMBAR</span>
-                        </button>
-
-                        {cert.credentialUrl && (
-                          <a 
-                            href={cert.credentialUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="cert-link-btn"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Buka keabsahan sertifikat di website penerbit"
-                          >
-                            <ExternalLink size={13} />
-                            <span>BUKTI LINK ↗</span>
-                          </a>
-                        )}
+                  <div key={cert.id} className="cert-card-item">
+                    {/* Header Row: Icon + Title & Issuer */}
+                    <div className="cert-card-header-row">
+                      <div className="cert-icon-box">
+                        <Award size={22} color="#7e22ce" />
+                      </div>
+                      <div className="cert-header-info">
+                        <h3 className="cert-title">{cert.title}</h3>
+                        <div className="cert-issuer">{cert.issuer}</div>
                       </div>
                     </div>
+
+                    {/* Single Full-width Button */}
+                    {linkUrl ? (
+                      <a 
+                        href={linkUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="cert-full-view-btn"
+                        title={`Buka sertifikat ${cert.title}`}
+                      >
+                        VIEW CERTIFICATE
+                      </a>
+                    ) : (
+                      <button 
+                        type="button" 
+                        className="cert-full-view-btn cert-btn-disabled" 
+                        disabled
+                      >
+                        VIEW CERTIFICATE
+                      </button>
+                    )}
                   </div>
                 );
               })}

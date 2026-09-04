@@ -180,7 +180,7 @@ body {
   animation: pawPulse 2s ease-in-out infinite;
 }
 
-/* Pixel Profile Walking Animation (Left & Right with Step Bobbing) */
+/* Pixel Profile Walking Animation (Walks left to right, turns around at the edge and walks back) */
 @keyframes pixelCharacterWalk {
   0% {
     transform: translateX(-40px) translateY(0) scaleX(1);
@@ -305,5 +305,16 @@ body {
 .avatar-badge,
 .skills-avatar-badge {
   animation: badgeGlowPulse 2.5s ease-in-out infinite;
+}
+
+/* Responsive Window Header Elements */
+.pixel-window-tag-badge {
+  white-space: nowrap !important;
+}
+
+@media (max-width: 640px) {
+  .pixel-window-tags-container {
+    display: none !important;
+  }
 }
 

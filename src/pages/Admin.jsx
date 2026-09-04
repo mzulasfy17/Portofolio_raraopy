@@ -20,7 +20,6 @@ import {
   updateIntro,
   updateNavbar,
   updateFooter,
-  seedInitialFirebaseData,
   uploadFileToStorage
 } from '../services/dataService';
 import { 
@@ -31,7 +30,6 @@ import {
   Edit3, 
   Trash2, 
   Save, 
-  Database, 
   Briefcase, 
   Award, 
   FolderGit2, 
@@ -47,7 +45,8 @@ import {
   Calendar,
   Eye,
   EyeOff,
-  Compass
+  Compass,
+  Building2
 } from 'lucide-react';
 import './Admin.css';
 
@@ -57,6 +56,15 @@ const MONTH_OPTIONS = [
 ];
 
 const YEAR_OPTIONS = Array.from({ length: 15 }, (_, i) => 2018 + i);
+
+const formatExternalUrl = (url) => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('//') || trimmed.startsWith('/') || trimmed.startsWith('mailto:')) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
 
 export default function Admin() {
   const { experiences, skillCategories, certificates, projects, profile, intro, navbar, footer, refreshData } = usePortfolioData();
@@ -93,6 +101,13 @@ export default function Admin() {
   const [certMonth, setCertMonth] = useState('Januari');
   const [certYear, setCertYear] = useState('2024');
 
+  // Project Date Picker State
+  const [projStartMonth, setProjStartMonth] = useState('Januari');
+  const [projStartYear, setProjStartYear] = useState('2024');
+  const [projEndMonth, setProjEndMonth] = useState('Desember');
+  const [projEndYear, setProjEndYear] = useState('2025');
+  const [isProjCurrent, setIsProjCurrent] = useState(false);
+
   // Form States
   const [expForm, setExpForm] = useState({
     category: 'education',
@@ -110,19 +125,16 @@ export default function Admin() {
   });
 
   const [certForm, setCertForm] = useState({
-    certId: '',
     title: '',
     issuerName: '',
-    credentialId: '',
-    imageUrl: '',
-    credentialUrl: '',
-    description: '',
-    skillsStr: ''
+    credentialUrl: ''
   });
 
   const [projForm, setProjForm] = useState({
     badgeLabel: 'PROJECT',
     title: '',
+    company: '',
+    skillsStr: '',
     description: ''
   });
 
@@ -131,6 +143,7 @@ export default function Admin() {
     tagline: '',
     bio: '',
     cvUrl: '',
+    avatarUrl: '',
     location: '',
     email: '',
     specialtiesStr: ''
@@ -176,6 +189,7 @@ export default function Admin() {
         tagline: profile.tagline || '',
         bio: profile.bio || '',
         cvUrl: profile.cvUrl || '',
+        avatarUrl: profile.avatarUrl || '',
         location: profile.location || '',
         email: profile.email || '',
         specialtiesStr: (profile.specialties || []).join(', ')
@@ -255,20 +269,6 @@ export default function Admin() {
     }
   };
 
-  const handleSeedDatabase = async () => {
-    if (!window.confirm('Apakah Anda yakin ingin mengisi Firestore Database dengan data awal (seed data)?')) return;
-    setActionLoading(true);
-    try {
-      await seedInitialFirebaseData();
-      await refreshData();
-      showToast('success', 'Data awal berhasil di-seed ke Firebase Firestore!');
-    } catch (err) {
-      showToast('error', 'Gagal seed data: ' + err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   // --- FILE UPLOAD HANDLERS (IMAGES & PDF DOCUMENTS) ---
   const handleCertFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -280,7 +280,7 @@ export default function Admin() {
       const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
 
       if (isPdf) {
-        setCertForm(prev => ({ ...prev, credentialUrl: fileUrl, isPdf: true }));
+        setCertForm(prev => ({ ...prev, credentialUrl: fileUrl, imageUrl: '', isPdf: true }));
         showToast('success', 'Dokumen PDF sertifikat berhasil diunggah!');
       } else {
         setCertForm(prev => ({ ...prev, imageUrl: fileUrl, isPdf: false }));
@@ -290,6 +290,7 @@ export default function Admin() {
       showToast('error', 'Gagal mengunggah file: ' + err.message);
     } finally {
       setUploadingFile(false);
+      try { e.target.value = ''; } catch (_) {}
     }
   };
 
@@ -304,6 +305,22 @@ export default function Admin() {
       showToast('success', 'File CV berhasil diunggah!');
     } catch (err) {
       showToast('error', 'Gagal mengunggah CV: ' + err.message);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleAvatarFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    try {
+      const fileUrl = await uploadFileToStorage(file, 'avatar_photos');
+      setProfileForm(prev => ({ ...prev, avatarUrl: fileUrl }));
+      showToast('success', 'Foto profil berhasil diunggah!');
+    } catch (err) {
+      showToast('error', 'Gagal mengunggah Foto Profil: ' + err.message);
     } finally {
       setUploadingFile(false);
     }
@@ -458,28 +475,29 @@ export default function Admin() {
   const openCertModal = (cert = null) => {
     if (cert) {
       setEditingItem(cert);
+      let parsedIssuer = cert.issuer || '';
+      let parsedYear = '2025';
+      if (parsedIssuer.includes('•')) {
+        const parts = parsedIssuer.split('•');
+        parsedIssuer = parts[0].trim();
+        parsedYear = parts[1].trim();
+      }
       setCertForm({
-        certId: cert.certId || '',
         title: cert.title || '',
-        issuerName: cert.issuer ? cert.issuer.split('•')[0].trim() : '',
-        credentialId: cert.credentialId || '',
-        imageUrl: cert.imageUrl || '',
-        credentialUrl: cert.credentialUrl || '',
-        description: cert.description || '',
-        skillsStr: (cert.skills || []).join(', ')
+        issuerName: parsedIssuer,
+        credentialUrl: cert.credentialUrl || cert.link || ''
       });
+      if (parsedYear) {
+        setCertYear(parsedYear);
+      }
     } else {
       setEditingItem(null);
       setCertForm({
-        certId: 'CERT-' + Date.now().toString().slice(-4),
         title: '',
         issuerName: '',
-        credentialId: '',
-        imageUrl: '',
-        credentialUrl: '',
-        description: '',
-        skillsStr: ''
+        credentialUrl: ''
       });
+      setCertYear('2025');
     }
     setActiveModal('cert');
   };
@@ -488,27 +506,39 @@ export default function Admin() {
     e.preventDefault();
     setActionLoading(true);
 
-    const fullIssuer = `${certForm.issuerName || 'Penerbit Sertifikat'} • ${certMonth.slice(0, 3)} ${certYear}`;
+    const fullIssuer = certForm.issuerName ? `${certForm.issuerName} • ${certYear}` : certYear;
+    const formattedLink = formatExternalUrl(certForm.credentialUrl);
 
     try {
       const payload = {
-        certId: certForm.certId,
         title: certForm.title,
         issuer: fullIssuer,
-        credentialId: certForm.credentialId,
-        imageUrl: certForm.imageUrl,
-        credentialUrl: certForm.credentialUrl,
-        description: certForm.description,
-        skills: certForm.skillsStr.split(',').map(s => s.trim()).filter(Boolean)
+        credentialUrl: formattedLink
       };
 
       if (!currentUser) {
+        const newCert = { id: editingItem?.id || 'cert-' + Date.now(), ...payload };
+        let updatedList;
+        if (editingItem?.id) {
+          updatedList = certificates.map(c => c.id === editingItem.id ? newCert : c);
+        } else {
+          updatedList = [newCert, ...certificates];
+        }
+        updateLocalMemoryCache('certificates', updatedList);
         showToast('success', 'Sertifikat disimpan! (Demo Mode)');
         setActiveModal(null);
         return;
       }
 
-      await saveCertificate(payload, editingItem?.id);
+      const saved = await saveCertificate(payload, editingItem?.id);
+      const newCert = { id: saved.id || editingItem?.id || 'cert-' + Date.now(), ...payload };
+      let updatedList;
+      if (editingItem?.id) {
+        updatedList = certificates.map(c => c.id === editingItem.id ? newCert : c);
+      } else {
+        updatedList = [newCert, ...certificates];
+      }
+      updateLocalMemoryCache('certificates', updatedList);
       showToast('success', 'Sertifikat berhasil disimpan!');
       setActiveModal(null);
       await refreshData();
@@ -523,7 +553,15 @@ export default function Admin() {
     if (!window.confirm('Hapus sertifikat ini?')) return;
     setActionLoading(true);
     try {
+      if (!currentUser) {
+        const updatedList = certificates.filter(c => c.id !== id);
+        updateLocalMemoryCache('certificates', updatedList);
+        showToast('success', 'Sertifikat berhasil dihapus! (Demo Mode)');
+        return;
+      }
       await deleteCertificate(id);
+      const updatedList = certificates.filter(c => c.id !== id);
+      updateLocalMemoryCache('certificates', updatedList);
       showToast('success', 'Sertifikat berhasil dihapus.');
       await refreshData();
     } catch (err) {
@@ -540,11 +578,49 @@ export default function Admin() {
       setProjForm({
         badgeLabel: proj.badgeLabel || 'PROJECT',
         title: proj.title || '',
+        company: proj.company || '',
+        skillsStr: (proj.skills || []).join(', '),
         description: proj.description || ''
       });
+      if (proj.period) {
+        const parts = proj.period.split(' - ');
+        if (parts[0]) {
+          const startParts = parts[0].trim().split(' ');
+          if (startParts.length >= 2) {
+            const matchedM = MONTH_OPTIONS.find(m => m.toLowerCase().startsWith(startParts[0].toLowerCase())) || 'Januari';
+            setProjStartMonth(matchedM);
+            setProjStartYear(startParts[1] || '2024');
+          }
+        }
+        if (parts[1]) {
+          const endStr = parts[1].trim();
+          if (endStr.toLowerCase() === 'sekarang' || endStr.toLowerCase() === 'present') {
+            setIsProjCurrent(true);
+          } else {
+            setIsProjCurrent(false);
+            const endParts = endStr.split(' ');
+            if (endParts.length >= 2) {
+              const matchedM = MONTH_OPTIONS.find(m => m.toLowerCase().startsWith(endParts[0].toLowerCase())) || 'Desember';
+              setProjEndMonth(matchedM);
+              setProjEndYear(endParts[1] || '2025');
+            }
+          }
+        }
+      } else {
+        setIsProjCurrent(false);
+        setProjStartMonth('Januari');
+        setProjStartYear('2024');
+        setProjEndMonth('Desember');
+        setProjEndYear('2025');
+      }
     } else {
       setEditingItem(null);
-      setProjForm({ badgeLabel: 'PROJECT', title: '', description: '' });
+      setProjForm({ badgeLabel: 'PROJECT', title: '', company: '', skillsStr: '', description: '' });
+      setIsProjCurrent(false);
+      setProjStartMonth('Januari');
+      setProjStartYear('2024');
+      setProjEndMonth('Desember');
+      setProjEndYear('2025');
     }
     setActiveModal('proj');
   };
@@ -552,10 +628,18 @@ export default function Admin() {
   const handleSaveProj = async (e) => {
     e.preventDefault();
     setActionLoading(true);
+
+    const periodText = isProjCurrent 
+      ? `${projStartMonth.slice(0, 3)} ${projStartYear} - Sekarang`
+      : `${projStartMonth.slice(0, 3)} ${projStartYear} - ${projEndMonth.slice(0, 3)} ${projEndYear}`;
+
     try {
       const payload = {
         badgeLabel: projForm.badgeLabel,
         title: projForm.title,
+        company: projForm.company,
+        skills: projForm.skillsStr.split(',').map(s => s.trim()).filter(Boolean),
+        period: periodText,
         description: projForm.description
       };
       if (!currentUser) {
@@ -677,16 +761,19 @@ export default function Admin() {
         tagline: profileForm.tagline,
         bio: profileForm.bio,
         cvUrl: profileForm.cvUrl,
+        avatarUrl: profileForm.avatarUrl,
         location: profileForm.location,
         email: profileForm.email,
         specialties: profileForm.specialtiesStr.split(',').map(s => s.trim()).filter(Boolean)
       };
       if (!currentUser) {
-        showToast('success', 'Profil diperbarui! (Demo Mode)');
+        updateLocalMemoryCache('profile', payload);
+        showToast('success', 'Profil & Foto diperbarui! (Demo Mode)');
         return;
       }
       await updateProfile(payload);
-      showToast('success', 'Profil & Dokumen CV berhasil diperbarui!');
+      updateLocalMemoryCache('profile', payload);
+      showToast('success', 'Profil, Foto & Dokumen CV berhasil diperbarui!');
       await refreshData();
     } catch (err) {
       showToast('error', 'Gagal memperbarui profil: ' + err.message);
@@ -733,7 +820,7 @@ export default function Admin() {
       )}
 
       {/* Main Retro Window Container */}
-      <Window title="FIREBASE_ADMIN_PANEL.EXE" icon={ShieldCheck} tags={['• MOBILE AUTO-LAYOUT', 'V3.5 ✨']}>
+      <Window title="FIREBASE_ADMIN_PANEL.EXE" icon={ShieldCheck} tags={['ADMIN OS v3.5 ✨']}>
         
         {/* Firebase Config Notice */}
         {!isFirebaseConfigured && (
@@ -834,11 +921,6 @@ export default function Admin() {
                 <span className="user-email-pill">
                   <User size={14} /> {currentUser ? currentUser.email : 'Demo Admin'}
                 </span>
-                {isFirebaseConfigured && (
-                  <button className="pixel-btn-secondary" onClick={handleSeedDatabase} disabled={actionLoading} title="Isi Firebase dengan data bawaan awal">
-                    <Database size={14} /> Seed Data
-                  </button>
-                )}
                 <button className="pixel-btn-secondary" onClick={handleLogout}>
                   <LogOut size={14} /> Logout
                 </button>
@@ -975,7 +1057,7 @@ export default function Admin() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                     <h3 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.9rem', color: '#581c87', margin: 0 }}>
-                      SERTIFIKAT & LISENSI (UPLOAD GAMBAR / PDF)
+                      SERTIFIKAT & LISENSI
                     </h3>
                     <button className="pixel-btn-primary" onClick={() => openCertModal()}>
                       <Plus size={14} /> Tambah Sertifikat
@@ -987,7 +1069,7 @@ export default function Admin() {
                       <div key={cert.id} className="admin-item-card">
                         <div>
                           <div className="admin-item-header">
-                            <span className="pixel-badge">{cert.certId || 'CERT'}</span>
+                            <span className="pixel-badge">CERTIFICATE</span>
                             <div className="admin-item-actions">
                               <button className="pixel-btn-secondary" style={{ padding: '4px 8px' }} onClick={() => openCertModal(cert)}>
                                 <Edit3 size={12} /> Edit
@@ -997,21 +1079,19 @@ export default function Admin() {
                               </button>
                             </div>
                           </div>
-                          
-                          {/* Image/PDF preview badge if uploaded */}
-                          {cert.imageUrl ? (
-                            <div style={{ marginBottom: '8px', borderRadius: '6px', overflow: 'hidden', height: '100px', border: '1px solid #c084fc' }}>
-                              <img src={cert.imageUrl} alt={cert.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </div>
-                          ) : cert.credentialUrl && cert.credentialUrl.endsWith('.pdf') ? (
-                            <div style={{ marginBottom: '8px', padding: '8px', background: '#faf5ff', borderRadius: '6px', border: '1px solid #c084fc', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#6b21a8' }}>
-                              <FileText size={16} /> <span>Dokumen Sertifikat PDF</span>
-                            </div>
-                          ) : null}
 
                           <h4 className="admin-item-title">{cert.title}</h4>
-                          <p style={{ fontSize: '0.8rem', color: '#6b21a8', margin: '4px 0' }}>{cert.issuer}</p>
-                          <p style={{ fontSize: '0.78rem', color: '#64748b' }}>ID Credential: {cert.credentialId || '-'}</p>
+                          <p style={{ fontSize: '0.8rem', color: '#6b21a8', margin: '4px 0', fontWeight: '500' }}>{cert.issuer}</p>
+                          {cert.credentialUrl && (
+                            <a 
+                              href={cert.credentialUrl} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              style={{ fontSize: '0.76rem', color: '#7e22ce', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}
+                            >
+                              <ExternalLink size={12} /> Lihat Link
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1050,9 +1130,28 @@ export default function Admin() {
                           </div>
                         </div>
                         <h4 className="admin-item-title">{proj.title}</h4>
+                        {proj.company && (
+                          <div style={{ fontSize: '0.78rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', fontWeight: '500' }}>
+                            <Building2 size={12} color="#7e22ce" /> {proj.company}
+                          </div>
+                        )}
+                        {proj.period && (
+                          <span style={{ fontSize: '0.78rem', color: '#6b21a8', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px', fontWeight: '500' }}>
+                            <Calendar size={12} /> {proj.period}
+                          </span>
+                        )}
                         <p style={{ fontSize: '0.82rem', color: '#475569', margin: '8px 0 0 0', lineHeight: '1.4' }}>
                           {proj.description}
                         </p>
+                        {proj.skills && proj.skills.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '10px' }}>
+                            {proj.skills.map((sk, idx) => (
+                              <span key={idx} className="pixel-badge" style={{ fontSize: '0.7rem', background: '#f3e8ff', color: '#6b21a8', border: '1px solid #d8b4fe' }}>
+                                {sk}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1100,6 +1199,45 @@ export default function Admin() {
                       value={profileForm.bio} 
                       onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} 
                     />
+                  </div>
+
+                  {/* UPLOAD FOTO PROFIL */}
+                  <div className="admin-form-group">
+                    <label><ImageIcon size={14} /> UPLOAD FOTO PROFIL (AVATAR PORTRAIT)</label>
+                    <div className="file-dropzone-container">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="file-dropzone-input" 
+                        onChange={handleAvatarFileUpload}
+                        disabled={uploadingFile}
+                      />
+                      <div className="file-dropzone-content">
+                        {uploadingFile ? (
+                          <>
+                            <Loader2 size={24} className="animate-spin" />
+                            <span className="file-dropzone-title">Mengunggah Foto Profil...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ImageIcon size={28} />
+                            <span className="file-dropzone-title">Klik atau Seret Foto Profil (PNG/JPG) ke Sini</span>
+                            <span className="file-dropzone-sub">Ganti foto profil utama portofolio</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Preview Avatar Image if present */}
+                    {profileForm.avatarUrl && (
+                      <div className="file-preview-box">
+                        <img src={profileForm.avatarUrl} alt="Preview Foto Profil" className="file-preview-thumb" />
+                        <div className="file-preview-info">
+                          <div className="file-preview-name">Foto Profil Terpasang</div>
+                          <span style={{ fontSize: '0.74rem', color: '#166534' }}>✓ Foto profil aktif</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* UPLOAD FILE CV DOCUMENT */}
@@ -1609,7 +1747,7 @@ export default function Admin() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: CERTIFICATE FORM (FILE UPLOAD GAMBAR / PDF + DATE PICKER) */}
+      {/* MODAL: CERTIFICATE FORM */}
       {/* ========================================================= */}
       {activeModal === 'cert' && (
         <div className="admin-modal-overlay">
@@ -1624,34 +1762,12 @@ export default function Admin() {
             </div>
 
             <form onSubmit={handleSaveCert}>
-              <div className="month-year-grid" style={{ marginBottom: '16px' }}>
-                <div className="admin-form-group" style={{ margin: 0 }}>
-                  <label>KODE SERTIFIKAT</label>
-                  <input 
-                    type="text" 
-                    className="admin-input" 
-                    value={certForm.certId} 
-                    onChange={(e) => setCertForm({ ...certForm, certId: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div className="admin-form-group" style={{ margin: 0 }}>
-                  <label>CREDENTIAL ID</label>
-                  <input 
-                    type="text" 
-                    className="admin-input" 
-                    value={certForm.credentialId} 
-                    onChange={(e) => setCertForm({ ...certForm, credentialId: e.target.value })} 
-                  />
-                </div>
-              </div>
-
               <div className="admin-form-group">
-                <label>NAMA SERTIFIKASI</label>
+                <label>JUDUL SERTIFIKAT</label>
                 <input 
                   type="text" 
                   className="admin-input" 
-                  placeholder="Mastering Excel Data Analysis & SPSS" 
+                  placeholder="Legacy JavaScript Algorithms and Data Structures" 
                   value={certForm.title} 
                   onChange={(e) => setCertForm({ ...certForm, title: e.target.value })} 
                   required 
@@ -1663,110 +1779,35 @@ export default function Admin() {
                 <input 
                   type="text" 
                   className="admin-input" 
-                  placeholder="MySkill Intensive Bootcamp" 
+                  placeholder="freeCodeCamp / MySkill" 
                   value={certForm.issuerName} 
                   onChange={(e) => setCertForm({ ...certForm, issuerName: e.target.value })} 
                   required 
                 />
               </div>
 
-              {/* CERTIFICATE DATE PICKER */}
-              <div className="period-container-box">
-                <div className="period-title-sub"><Calendar size={13} style={{ display: 'inline', marginRight: '4px' }} /> PILIH BULAN & TAHUN PENERBITAN</div>
-                <div className="month-year-grid">
-                  <select className="admin-select" value={certMonth} onChange={(e) => setCertMonth(e.target.value)}>
-                    {MONTH_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                  <select className="admin-select" value={certYear} onChange={(e) => setCertYear(e.target.value)}>
-                    {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* FILE UPLOAD DROPZONE (IMAGE OR PDF) */}
               <div className="admin-form-group">
-                <label><UploadCloud size={14} /> UPLOAD FILE SERTIFIKAT (GAMBAR / PDF)</label>
-                <div className="file-dropzone-container">
-                  <input 
-                    type="file" 
-                    accept="image/*,.pdf"
-                    className="file-dropzone-input" 
-                    onChange={handleCertFileUpload}
-                    disabled={uploadingFile}
-                  />
-                  <div className="file-dropzone-content">
-                    {uploadingFile ? (
-                      <>
-                        <Loader2 size={24} className="animate-spin" />
-                        <span className="file-dropzone-title">Mengunggah File Sertifikat...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud size={28} />
-                        <span className="file-dropzone-title">Klik / Seret File Sertifikat (Gambar atau PDF) Ke Sini</span>
-                        <span className="file-dropzone-sub">Mendukung format JPG, PNG, WEBP, atau PDF</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Realtime Thumbnail or PDF Preview */}
-                {certForm.imageUrl ? (
-                  <div className="file-preview-box">
-                    <img src={certForm.imageUrl} alt="Pratinjau Sertifikat" className="file-preview-thumb" />
-                    <div className="file-preview-info">
-                      <div className="file-preview-name">Gambar Sertifikat Terpasang</div>
-                      <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 'bold' }}>✓ Gambar Siap Dipublikasikan</span>
-                    </div>
-                  </div>
-                ) : certForm.credentialUrl ? (
-                  <div className="file-preview-box">
-                    <FileText size={32} color="#9333ea" />
-                    <div className="file-preview-info">
-                      <div className="file-preview-name">File Dokumen PDF Terpasang</div>
-                      <a href={certForm.credentialUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.74rem', color: '#9333ea', textDecoration: 'underline' }}>
-                        Lihat Dokumen PDF ↗
-                      </a>
-                    </div>
-                  </div>
-                ) : null}
+                <label>TAHUN PENERBITAN</label>
+                <select className="admin-select" value={certYear} onChange={(e) => setCertYear(e.target.value)}>
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
               </div>
 
               <div className="admin-form-group">
-                <label>URL LINK BUKTI / VERIFIKASI (OPSIONAL)</label>
+                <label>URL LINK SERTIFIKAT</label>
                 <input 
                   type="text" 
                   className="admin-input" 
-                  placeholder="https://..." 
+                  placeholder="https://freecodecamp.org/certification/..." 
                   value={certForm.credentialUrl} 
                   onChange={(e) => setCertForm({ ...certForm, credentialUrl: e.target.value })} 
-                />
-              </div>
-
-              <div className="admin-form-group">
-                <label>DESKRIPSI RINGKAS</label>
-                <textarea 
-                  className="admin-textarea" 
-                  rows={3} 
-                  value={certForm.description} 
-                  onChange={(e) => setCertForm({ ...certForm, description: e.target.value })} 
-                />
-              </div>
-
-              <div className="admin-form-group">
-                <label>TAG SKILL (Dipisah Koma)</label>
-                <input 
-                  type="text" 
-                  className="admin-input" 
-                  placeholder="Excel Data Analysis, SPSS" 
-                  value={certForm.skillsStr} 
-                  onChange={(e) => setCertForm({ ...certForm, skillsStr: e.target.value })} 
+                  required
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                 <button type="button" className="pixel-btn-secondary" onClick={() => setActiveModal(null)}>Batal</button>
-                <button type="submit" className="pixel-btn-primary" disabled={actionLoading || uploadingFile}>
+                <button type="submit" className="pixel-btn-primary" disabled={actionLoading}>
                   <Save size={14} /> {actionLoading ? 'Menyimpan...' : 'Simpan Sertifikat'}
                 </button>
               </div>
@@ -1815,6 +1856,61 @@ export default function Admin() {
               </div>
 
               <div className="admin-form-group">
+                <label>PERUSAHAAN / INSTANSI / KLIEN</label>
+                <input 
+                  type="text" 
+                  className="admin-input" 
+                  placeholder="Contoh: Universitas Islam Riau / PT Ebiz Karisma" 
+                  value={projForm.company} 
+                  onChange={(e) => setProjForm({ ...projForm, company: e.target.value })} 
+                />
+              </div>
+
+              {/* MONTH & YEAR DROPDOWN PICKERS FOR PROJECT */}
+              <div className="period-container-box">
+                <div className="period-title-sub">
+                  <Calendar size={13} style={{ display: 'inline', marginRight: '4px' }} /> PILIH PERIODE WAKTU PENGERJAAN
+                </div>
+                
+                {/* START DATE */}
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ fontSize: '0.7rem', color: '#6b21a8', display: 'block', marginBottom: '4px' }}>WAKTU MULAI:</label>
+                  <div className="month-year-grid">
+                    <select className="admin-select" value={projStartMonth} onChange={(e) => setProjStartMonth(e.target.value)}>
+                      {MONTH_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <select className="admin-select" value={projStartYear} onChange={(e) => setProjStartYear(e.target.value)}>
+                      {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* END DATE */}
+                {!isProjCurrent && (
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: '#6b21a8', display: 'block', marginBottom: '4px' }}>WAKTU SELESAI:</label>
+                    <div className="month-year-grid">
+                      <select className="admin-select" value={projEndMonth} onChange={(e) => setProjEndMonth(e.target.value)}>
+                        {MONTH_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <select className="admin-select" value={projEndYear} onChange={(e) => setProjEndYear(e.target.value)}>
+                        {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <label className="checkbox-current-label">
+                  <input 
+                    type="checkbox" 
+                    checked={isProjCurrent} 
+                    onChange={(e) => setIsProjCurrent(e.target.checked)} 
+                  />
+                  <span>Masih Berjalan / Sampai Sekarang</span>
+                </label>
+              </div>
+
+              <div className="admin-form-group">
                 <label>DESKRIPSI PROYEK</label>
                 <textarea 
                   className="admin-textarea" 
@@ -1822,6 +1918,17 @@ export default function Admin() {
                   value={projForm.description} 
                   onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} 
                   required
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>TAG SKILL (Dipisah Koma)</label>
+                <input 
+                  type="text" 
+                  className="admin-input" 
+                  placeholder="SPSS, Data Analysis, Content Strategy" 
+                  value={projForm.skillsStr} 
+                  onChange={(e) => setProjForm({ ...projForm, skillsStr: e.target.value })} 
                 />
               </div>
 

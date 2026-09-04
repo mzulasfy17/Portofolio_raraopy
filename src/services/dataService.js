@@ -113,37 +113,22 @@ export const DEFAULT_CERTIFICATES = [
     id: 'cert-1',
     certId: 'CERT-KARIRNEXT-01',
     title: 'Sertifikasi Microsoft Office Excel, Word & Power Point Specialist',
-    issuer: 'KarirNex / PT Ebiz Karisma Internasional • 2026',
-    credentialId: 'rig1xRo',
-    imageKey: 'certBnspImg',
-    imageUrl: '',
-    credentialUrl: 'https://karirnex.com/c/rig1xRo',
-    description: 'Sertifikasi resmi kompetensi nasional dalam mengelola sumber daya manusia, perencanaan tenaga kerja, rekrutmen, serta pengoperasian sistem HRIS perusahaan.',
-    skills: ['HRIS Management', 'Talent Acquisition', 'Employee Performance', 'Workplace Relations']
+    issuer: 'KarirNex • 2026',
+    credentialUrl: 'https://karirnex.com/c/rig1xRo'
   },
   {
     id: 'cert-2',
     certId: 'CERT-MYSKILL-02',
     title: 'Mastering Excel Data Analysis & SPSS',
-    issuer: 'MySkill Intensive Bootcamp • 2024',
-    credentialId: 'MYSKILL-EXCEL-SPSS-7714',
-    imageKey: 'certMySkillImg',
-    imageUrl: '',
-    credentialUrl: 'https://myskill.id/verify/MYSKILL-EXCEL-SPSS-7714',
-    description: 'Sertifikat pelatihan intensif pemrosesan data statistik bisnis menggunakan rumus advanced Excel (VLOOKUP, PivotTable, Data Cleaning) dan analisis regresi linier SPSS.',
-    skills: ['Excel Data Analysis', 'SPSS Regression', 'Data Cleaning', 'Statistical Modeling']
+    issuer: 'MySkill • 2024',
+    credentialUrl: 'https://myskill.id/verify/MYSKILL-EXCEL-SPSS-7714'
   },
   {
     id: 'cert-3',
     certId: 'CERT-DICODING-03',
     title: 'Dasar Digital Marketing & Analytics',
     issuer: 'Dicoding Academy • 2024',
-    credentialId: 'DICODING-DM-9921',
-    imageKey: 'certDicodingImg',
-    imageUrl: '',
-    credentialUrl: 'https://dicoding.com/certificates/DICODING-DM-9921',
-    description: 'Sertifikasi fondasi strategi pemasaran digital, pemetaan audiens, metrik performa conversion rate, serta pengelolaan kampanye sosial media.',
-    skills: ['Digital Marketing', 'Campaign Analytics', 'Content Strategy', 'SEO Basic']
+    credentialUrl: 'https://dicoding.com/certificates/DICODING-DM-9921'
   }
 ];
 
@@ -152,13 +137,19 @@ export const DEFAULT_PROJECTS = [
     id: 'proj-1',
     badgeLabel: 'SKRIPSI / FINAL RESEARCH',
     title: 'Analisis Pengaruh Budaya Organisasi Terhadap Kinerja Karyawan',
-    description: 'Penelitian analisis kuantitatif menggunakan SPSS untuk menguji hubungan antara komunikasi internal dan motivasi kerja terhadap produktivitas tim.'
+    company: 'Universitas Islam Riau',
+    period: 'Jan 2024 - Des 2024',
+    description: 'Penelitian analisis kuantitatif menggunakan SPSS untuk menguji hubungan antara komunikasi internal dan motivasi kerja terhadap produktivitas tim.',
+    skills: ['SPSS Statistics', 'Data Analysis', 'Employee Performance', 'Quantitative Research']
   },
   {
     id: 'proj-2',
     badgeLabel: 'MARKETING CAMPAIGN',
     title: 'Digital Marketing Strategy Plan for Local MSME',
-    description: 'Perancangan strategi re-branding, perencanaan konten Instagram/TikTok, serta pemetaan target pasar konsumen muda bagi UMKM lokal.'
+    company: 'Independent Client / UMKM Pekanbaru',
+    period: 'Jan 2025 - Mei 2025',
+    description: 'Perancangan strategi re-branding, perencanaan konten Instagram/TikTok, serta pemetaan target pasar konsumen muda bagi UMKM lokal.',
+    skills: ['Digital Marketing', 'Content Strategy', 'Social Media Ads', 'Market Research']
   }
 ];
 
@@ -167,6 +158,7 @@ export const DEFAULT_PROFILE = {
   tagline: 'Management & HR Specialist ✨',
   bio: 'Fresh Graduate Manajemen dengan minat mendalam pada Human Resource Management, Digital Marketing, dan Analisis Data Bisnis.',
   cvUrl: '/CV_Rahma_Novridayanti.pdf',
+  avatarUrl: '',
   location: 'Pekanbaru, Riau, Indonesia',
   email: 'rahma.novridayanti@email.com',
   specialties: [
@@ -539,24 +531,28 @@ export async function seedInitialFirebaseData() {
 export async function uploadFileToStorage(file, folder = 'uploads') {
   if (!file) return null;
 
+  const readAsDataURL = (fileToRead) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(fileToRead);
+    });
+  };
+
   // 1. Try Firebase Storage if configured
   if (isFirebaseConfigured && storage) {
     try {
       const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const storageRef = ref(storage, `${folder}/${cleanFileName}`);
-      const snapshot = await withTimeout(uploadBytes(storageRef, file), 10000, 'Upload storage timeout');
-      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 5000);
-      return downloadURL;
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 3000, 'Upload storage timeout');
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 3000);
+      if (downloadURL) return downloadURL;
     } catch (err) {
-      console.warn('Firebase Storage upload failed, using Data URL fallback:', err);
+      console.warn('Firebase Storage upload unavailable, using Base64 Data URL fallback:', err);
     }
   }
 
   // 2. Fallback to FileReader Data URL (for local demo & offline testing)
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
+  return await readAsDataURL(file);
 }
