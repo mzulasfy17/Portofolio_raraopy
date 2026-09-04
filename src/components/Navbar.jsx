@@ -1,17 +1,34 @@
 import React, { useState } from 'react';
-import { Home, Briefcase, Award, Mail, Menu, X } from 'lucide-react';
+import { Home, Briefcase, FolderGit2, Award, Mail, Menu, X, ShieldCheck } from 'lucide-react';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import './Navbar.css';
+
+const ICON_MAP = {
+  Home: Home,
+  Briefcase: Briefcase,
+  FolderGit2: FolderGit2,
+  Award: Award,
+  Mail: Mail,
+  ShieldCheck: ShieldCheck
+};
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { navbar } = usePortfolioData();
 
-  const navItems = [
-    { id: 'home', label: 'HOME', icon: Home },
-    { id: 'experience', label: 'EXPERIENCE', icon: Briefcase },
-    { id: 'skills', label: 'SKILLS', icon: Award },
-    { id: 'contact', label: 'CONTACT', icon: Mail },
+  const title = navbar?.title || 'RAHMA NOVRIDAYANTI';
+  const subtitle = navbar?.subtitle || 'PORTFOLIO.EXE 🌟';
+
+  const defaultItems = [
+    { id: 'home', label: 'HOME', icon: 'Home', visible: true },
+    { id: 'experience', label: 'EXPERIENCE', icon: 'Briefcase', visible: true },
+    { id: 'skills', label: 'SKILLS', icon: 'Award', visible: true },
+    { id: 'contact', label: 'CONTACT', icon: 'Mail', visible: true },
   ];
+
+  const rawItems = navbar?.items && navbar.items.length > 0 ? navbar.items : defaultItems;
+  const navItems = rawItems.filter(item => item.visible !== false && item.id !== 'projects');
 
   const handleNavClick = (id) => {
     setActiveTab(id);
@@ -23,11 +40,11 @@ export default function Navbar({ activeTab, setActiveTab }) {
       <div className="navbar-top-bar">
         <div className="navbar-brand" onClick={() => handleNavClick('home')}>
           <div className="navbar-avatar-box">
-            <img src={avatarImg} alt="Rahma Novridayanti" />
+            <img src={avatarImg} alt={title} />
           </div>
           <div>
-            <h1 className="navbar-title">RAHMA NOVRIDAYANTI</h1>
-            <div className="navbar-subtitle">PORTFOLIO.EXE 🌟</div>
+            <h1 className="navbar-title">{title}</h1>
+            <div className="navbar-subtitle">{subtitle}</div>
           </div>
         </div>
 
@@ -45,7 +62,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
       <nav className={`navbar-nav-menu ${isMenuOpen ? 'mobile-open' : ''}`}>
         <ul className="navbar-links">
           {navItems.map((item) => {
-            const IconComponent = item.icon;
+            const IconComponent = (typeof item.icon === 'string' ? ICON_MAP[item.icon] : item.icon) || Briefcase;
             const isActive = activeTab === item.id;
             return (
               <li key={item.id}>

@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { GmailIcon, LinkedInIcon } from './BrandIcons';
+import { usePortfolioData } from '../hooks/usePortfolioData';
 import './Footer.css';
 
 export default function Footer({ onReplayIntro, onOpenAdmin }) {
   const [time, setTime] = useState('');
+  const { footer } = usePortfolioData();
+
+  const brandTitle = footer?.brandTitle || 'RAHMA NOVRIDAYANTI';
+  const brandSubtitle = footer?.brandSubtitle || 'MANAGEMENT & HR SPECIALIST • PEKANBARU, INDONESIA';
+  const email = footer?.email || 'rahma.novridayanti25@gmail.com';
+  const linkedin = footer?.linkedin || 'https://www.linkedin.com/in/rahma-novridayanti/';
+  const copyrightText = footer?.copyrightText || '© 2026 RAHMA NOVRIDAYANTI. ALL RIGHTS RESERVED.';
+  const statusText = footer?.statusText || 'SYSTEM STATUS: ONLINE 🐾';
+  const showSecretPaw = footer?.showSecretPaw !== false;
 
   useEffect(() => {
     const updateClock = () => {
@@ -27,6 +37,8 @@ export default function Footer({ onReplayIntro, onOpenAdmin }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onOpenAdmin]);
 
+  const emailHref = email.startsWith('mailto:') ? email : `mailto:${email}`;
+
   return (
     <div className="footer-wrapper">
       <footer className="footer-container">
@@ -34,24 +46,24 @@ export default function Footer({ onReplayIntro, onOpenAdmin }) {
         <div className="footer-top-row">
           <div>
             <div className="footer-brand-title">
-              <span>RAHMA NOVRIDAYANTI</span>
-              <span style={{ fontSize: '0.75rem', color: '#c084fc' }}>| PORTFOLIO.EXE</span>
+              <span>{brandTitle}</span>
+              <span style={{ fontSize: '0.75rem', color: '#c084fc' }}> | PORTFOLIO.EXE</span>
             </div>
             <div className="footer-brand-sub">
-              MANAGEMENT & HR SPECIALIST • PEKANBARU, INDONESIA
+              {brandSubtitle}
             </div>
           </div>
 
           <div className="footer-social-links">
             <a 
-              href="mailto:rahma.novridayanti25@gmail.com" 
+              href={emailHref} 
               className="footer-social-btn email-btn" 
               title="Send Gmail Email"
             >
               <GmailIcon size={20} />
             </a>
             <a 
-              href="https://www.linkedin.com/in/rahma-novridayanti/" 
+              href={linkedin} 
               target="_blank" 
               rel="noreferrer" 
               className="footer-social-btn linkedin-btn" 
@@ -65,21 +77,23 @@ export default function Footer({ onReplayIntro, onOpenAdmin }) {
         {/* Bottom Row: Copyright & Status */}
         <div className="footer-bottom-row">
           <div className="footer-copyright">
-            © 2026 RAHMA NOVRIDAYANTI. ALL RIGHTS RESERVED. 
+            {copyrightText}{' '}
             {/* Secret Admin Button: Cat Paw Print Icon 🐾 */}
-            <span 
-              style={{ cursor: 'pointer', marginLeft: '6px', userSelect: 'none' }}
-              onClick={onOpenAdmin}
-              title="Secret Admin Access 🐾"
-            >
-              🐾
-            </span>
+            {showSecretPaw && (
+              <span 
+                style={{ cursor: 'pointer', marginLeft: '6px', userSelect: 'none' }}
+                onClick={onOpenAdmin}
+                title="Secret Admin Access 🐾"
+              >
+                🐾
+              </span>
+            )}
           </div>
 
           <div className="footer-status-box">
             <div className="footer-status-item">
               <span className="status-dot-pulse"></span>
-              <span>SYSTEM STATUS: ONLINE 🐾</span>
+              <span>{statusText}</span>
             </div>
 
             <span className="status-divider">|</span>

@@ -3,7 +3,8 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebas
 import { auth, isFirebaseConfigured } from '../services/firebase';
 import Window from '../components/Window';
 import { 
-  usePortfolioData 
+  usePortfolioData,
+  updateLocalMemoryCache
 } from '../hooks/usePortfolioData';
 import { 
   addExperience, 
@@ -17,6 +18,8 @@ import {
   deleteProject,
   updateProfile,
   updateIntro,
+  updateNavbar,
+  updateFooter,
   seedInitialFirebaseData,
   uploadFileToStorage
 } from '../services/dataService';
@@ -41,7 +44,10 @@ import {
   Image as ImageIcon,
   ExternalLink,
   Loader2,
-  Calendar
+  Calendar,
+  Eye,
+  EyeOff,
+  Compass
 } from 'lucide-react';
 import './Admin.css';
 
@@ -53,12 +59,13 @@ const MONTH_OPTIONS = [
 const YEAR_OPTIONS = Array.from({ length: 15 }, (_, i) => 2018 + i);
 
 export default function Admin() {
-  const { experiences, skillCategories, certificates, projects, profile, refreshData } = usePortfolioData();
+  const { experiences, skillCategories, certificates, projects, profile, intro, navbar, footer, refreshData } = usePortfolioData();
 
   // Auth States
   const [currentUser, setCurrentUser] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -137,7 +144,20 @@ export default function Admin() {
     bootLogsStr: ''
   });
 
-  const { intro } = usePortfolioData();
+  const [navbarForm, setNavbarForm] = useState({
+    title: '',
+    subtitle: ''
+  });
+
+  const [footerForm, setFooterForm] = useState({
+    brandTitle: '',
+    brandSubtitle: '',
+    email: '',
+    linkedin: '',
+    copyrightText: '',
+    statusText: '',
+    showSecretPaw: true
+  });
 
   // Listen to Firebase Auth state
   useEffect(() => {
@@ -174,6 +194,29 @@ export default function Admin() {
       });
     }
   }, [intro]);
+
+  useEffect(() => {
+    if (navbar) {
+      setNavbarForm({
+        title: navbar.title || '',
+        subtitle: navbar.subtitle || ''
+      });
+    }
+  }, [navbar]);
+
+  useEffect(() => {
+    if (footer) {
+      setFooterForm({
+        brandTitle: footer.brandTitle || '',
+        brandSubtitle: footer.brandSubtitle || '',
+        email: footer.email || '',
+        linkedin: footer.linkedin || '',
+        copyrightText: footer.copyrightText || '',
+        statusText: footer.statusText || '',
+        showSecretPaw: footer.showSecretPaw !== false
+      });
+    }
+  }, [footer]);
 
   const showToast = (type, text) => {
     setMessage({ type, text });
@@ -516,11 +559,27 @@ export default function Admin() {
         description: projForm.description
       };
       if (!currentUser) {
+        const newProj = { id: editingItem?.id || 'proj-' + Date.now(), ...payload };
+        let updatedList;
+        if (editingItem?.id) {
+          updatedList = projects.map(p => p.id === editingItem.id ? newProj : p);
+        } else {
+          updatedList = [newProj, ...projects];
+        }
+        updateLocalMemoryCache('projects', updatedList);
         showToast('success', 'Proyek disimpan! (Demo Mode)');
         setActiveModal(null);
         return;
       }
-      await saveProject(payload, editingItem?.id);
+      const saved = await saveProject(payload, editingItem?.id);
+      const newProj = { id: saved.id || editingItem?.id || 'proj-' + Date.now(), ...payload };
+      let updatedList;
+      if (editingItem?.id) {
+        updatedList = projects.map(p => p.id === editingItem.id ? newProj : p);
+      } else {
+        updatedList = [newProj, ...projects];
+      }
+      updateLocalMemoryCache('projects', updatedList);
       showToast('success', 'Proyek berhasil disimpan!');
       setActiveModal(null);
       await refreshData();
@@ -535,11 +594,74 @@ export default function Admin() {
     if (!window.confirm('Hapus proyek ini?')) return;
     setActionLoading(true);
     try {
+      const updatedList = projects.filter(p => p.id !== id);
+      if (!currentUser) {
+        updateLocalMemoryCache('projects', updatedList);
+        showToast('success', 'Proyek berhasil dihapus. (Demo Mode)');
+        return;
+      }
       await deleteProject(id);
+      updateLocalMemoryCache('projects', updatedList);
       showToast('success', 'Proyek berhasil dihapus.');
       await refreshData();
     } catch (err) {
       showToast('error', 'Gagal menghapus: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // --- NAVBAR & FOOTER HANDLERS ---
+  const handleSaveNavbar = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...navbar,
+        title: navbarForm.title,
+        subtitle: navbarForm.subtitle
+      };
+      if (!currentUser) {
+        updateLocalMemoryCache('navbar', payload);
+        showToast('success', 'Pengaturan Navbar berhasil disimpan! (Demo Mode)');
+        return;
+      }
+      await updateNavbar(payload);
+      updateLocalMemoryCache('navbar', payload);
+      showToast('success', 'Pengaturan Navbar berhasil disimpan ke Firebase!');
+      await refreshData();
+    } catch (err) {
+      showToast('error', 'Gagal menyimpan navbar: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSaveFooter = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...footer,
+        brandTitle: footerForm.brandTitle,
+        brandSubtitle: footerForm.brandSubtitle,
+        email: footerForm.email,
+        linkedin: footerForm.linkedin,
+        copyrightText: footerForm.copyrightText,
+        statusText: footerForm.statusText,
+        showSecretPaw: footerForm.showSecretPaw
+      };
+      if (!currentUser) {
+        updateLocalMemoryCache('footer', payload);
+        showToast('success', 'Pengaturan Footer berhasil disimpan! (Demo Mode)');
+        return;
+      }
+      await updateFooter(payload);
+      updateLocalMemoryCache('footer', payload);
+      showToast('success', 'Pengaturan Footer berhasil disimpan ke Firebase!');
+      await refreshData();
+    } catch (err) {
+      showToast('error', 'Gagal menyimpan footer: ' + err.message);
     } finally {
       setActionLoading(false);
     }
@@ -664,14 +786,35 @@ export default function Admin() {
 
               <div className="admin-form-group">
                 <label>PASSWORD</label>
-                <input 
-                  type="password" 
-                  className="admin-input" 
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="admin-input" 
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ paddingRight: '40px', width: '100%' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#9333ea',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '4px'
+                    }}
+                    title={showPassword ? 'Sembunyikan Sandi' : 'Lihat Sandi'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <button type="submit" className="pixel-btn-primary" style={{ width: '100%', marginTop: '10px' }} disabled={authLoading}>
@@ -726,7 +869,13 @@ export default function Admin() {
                 className={`admin-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
                 onClick={() => setActiveTab('profile')}
               >
-                <User size={16} /> Profile / CV Upload
+                <User size={16} /> Profile / Intro
+              </button>
+              <button 
+                className={`admin-tab-btn ${activeTab === 'navfooter' ? 'active' : ''}`}
+                onClick={() => setActiveTab('navfooter')}
+              >
+                <Compass size={16} /> Navbar & Footer
               </button>
             </div>
 
@@ -1103,6 +1252,150 @@ export default function Admin() {
 
                     <button type="submit" className="pixel-btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={actionLoading}>
                       <Save size={16} /> {actionLoading ? 'MENYIMPAN...' : 'SIMPAN PENGATURAN INTRO'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================= */}
+            {/* TAB 5: NAVBAR & FOOTER CRUD */}
+            {/* ========================================================= */}
+            {activeTab === 'navfooter' && (
+              <div>
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.9rem', color: '#581c87', margin: 0 }}>
+                    🧭 PENGATURAN TAMPILAN NAVBAR & FOOTER
+                  </h3>
+                  <p style={{ fontFamily: 'var(--font-pixel-body)', fontSize: '0.8rem', color: '#6b21a8', marginTop: '4px' }}>
+                    Kelola nama brand, judul header, hak cipta, link email, LinkedIn, dan teks status footer.
+                  </p>
+                </div>
+
+                {/* FORM NAVBAR */}
+                <div style={{ background: '#ffffff', border: '2px solid #e9d5ff', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+                  <h4 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.85rem', color: '#581c87', marginTop: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Compass size={16} color="#9333ea" />
+                    PENGATURAN NAVBAR HEADER
+                  </h4>
+
+                  <form onSubmit={handleSaveNavbar}>
+                    <div className="month-year-grid" style={{ marginBottom: '16px' }}>
+                      <div className="admin-form-group" style={{ margin: 0 }}>
+                        <label>JUDUL UTAMA NAVBAR (NAMA)</label>
+                        <input 
+                          type="text" 
+                          className="admin-input" 
+                          value={navbarForm.title} 
+                          onChange={(e) => setNavbarForm({ ...navbarForm, title: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                      <div className="admin-form-group" style={{ margin: 0 }}>
+                        <label>SUBTITLE NAVBAR</label>
+                        <input 
+                          type="text" 
+                          className="admin-input" 
+                          value={navbarForm.subtitle} 
+                          onChange={(e) => setNavbarForm({ ...navbarForm, subtitle: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                    </div>
+
+                    <button type="submit" className="pixel-btn-primary" style={{ width: '100%', marginTop: '8px' }} disabled={actionLoading}>
+                      <Save size={16} /> {actionLoading ? 'MENYIMPAN...' : 'SIMPAN PENGATURAN NAVBAR'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* FORM FOOTER */}
+                <div style={{ background: '#ffffff', border: '2px solid #e9d5ff', borderRadius: '12px', padding: '24px' }}>
+                  <h4 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.85rem', color: '#581c87', marginTop: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={16} color="#9333ea" />
+                    PENGATURAN FOOTER SITE
+                  </h4>
+
+                  <form onSubmit={handleSaveFooter}>
+                    <div className="month-year-grid" style={{ marginBottom: '16px' }}>
+                      <div className="admin-form-group" style={{ margin: 0 }}>
+                        <label>JUDUL BRAND FOOTER</label>
+                        <input 
+                          type="text" 
+                          className="admin-input" 
+                          value={footerForm.brandTitle} 
+                          onChange={(e) => setFooterForm({ ...footerForm, brandTitle: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                      <div className="admin-form-group" style={{ margin: 0 }}>
+                        <label>SUBTITLE BRAND FOOTER</label>
+                        <input 
+                          type="text" 
+                          className="admin-input" 
+                          value={footerForm.brandSubtitle} 
+                          onChange={(e) => setFooterForm({ ...footerForm, brandSubtitle: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="month-year-grid" style={{ marginBottom: '16px' }}>
+                      <div className="admin-form-group" style={{ margin: 0 }}>
+                        <label>EMAIL KONTAK (GMAIL)</label>
+                        <input 
+                          type="email" 
+                          className="admin-input" 
+                          value={footerForm.email} 
+                          onChange={(e) => setFooterForm({ ...footerForm, email: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                      <div className="admin-form-group" style={{ margin: 0 }}>
+                        <label>URL LINKEDIN</label>
+                        <input 
+                          type="text" 
+                          className="admin-input" 
+                          value={footerForm.linkedin} 
+                          onChange={(e) => setFooterForm({ ...footerForm, linkedin: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>TEKS HAK CIPTA (COPYRIGHT)</label>
+                      <input 
+                        type="text" 
+                        className="admin-input" 
+                        value={footerForm.copyrightText} 
+                        onChange={(e) => setFooterForm({ ...footerForm, copyrightText: e.target.value })} 
+                        required 
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>TEKS STATUS SYSTEM FOOTER</label>
+                      <input 
+                        type="text" 
+                        className="admin-input" 
+                        value={footerForm.statusText} 
+                        onChange={(e) => setFooterForm({ ...footerForm, statusText: e.target.value })} 
+                        required 
+                      />
+                    </div>
+
+                    <label className="checkbox-current-label" style={{ marginTop: '12px', marginBottom: '16px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={footerForm.showSecretPaw} 
+                        onChange={(e) => setFooterForm({ ...footerForm, showSecretPaw: e.target.checked })} 
+                      />
+                      <span>Tampilkan Ikon Jejak Kucing Secret Admin Access (🐾) di Footer</span>
+                    </label>
+
+                    <button type="submit" className="pixel-btn-primary" style={{ width: '100%' }} disabled={actionLoading}>
+                      <Save size={16} /> {actionLoading ? 'MENYIMPAN...' : 'SIMPAN PENGATURAN FOOTER'}
                     </button>
                   </form>
                 </div>

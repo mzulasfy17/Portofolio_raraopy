@@ -6,12 +6,16 @@ import {
   fetchProjects, 
   fetchProfile,
   fetchIntro,
+  fetchNavbar,
+  fetchFooter,
   DEFAULT_EXPERIENCES,
   DEFAULT_SKILL_CATEGORIES,
   DEFAULT_CERTIFICATES,
   DEFAULT_PROJECTS,
   DEFAULT_PROFILE,
-  DEFAULT_INTRO
+  DEFAULT_INTRO,
+  DEFAULT_NAVBAR,
+  DEFAULT_FOOTER
 } from '../services/dataService';
 
 // Global In-Memory Cache shared across all page transitions
@@ -22,6 +26,8 @@ let memoryCache = {
   projects: DEFAULT_PROJECTS,
   profile: DEFAULT_PROFILE,
   intro: DEFAULT_INTRO,
+  navbar: DEFAULT_NAVBAR,
+  footer: DEFAULT_FOOTER,
   isFetched: false
 };
 
@@ -29,6 +35,11 @@ const listeners = new Set();
 
 function notifyListeners() {
   listeners.forEach(listener => listener({ ...memoryCache }));
+}
+
+export function updateLocalMemoryCache(key, newData) {
+  memoryCache[key] = newData;
+  notifyListeners();
 }
 
 export function usePortfolioData() {
@@ -43,13 +54,15 @@ export function usePortfolioData() {
     }
     
     try {
-      const [expData, skillsData, certsData, projData, profileData, introData] = await Promise.all([
+      const [expData, skillsData, certsData, projData, profileData, introData, navData, footerData] = await Promise.all([
         fetchExperiences(),
         fetchSkills(),
         fetchCertificates(),
         fetchProjects(),
         fetchProfile(),
-        fetchIntro()
+        fetchIntro(),
+        fetchNavbar(),
+        fetchFooter()
       ]);
       
       memoryCache = {
@@ -59,6 +72,8 @@ export function usePortfolioData() {
         projects: projData,
         profile: profileData,
         intro: introData,
+        navbar: navData,
+        footer: footerData,
         isFetched: true
       };
       
@@ -95,6 +110,8 @@ export function usePortfolioData() {
     projects: data.projects,
     profile: data.profile,
     intro: data.intro,
+    navbar: data.navbar,
+    footer: data.footer,
     loading,
     error,
     refreshData: () => loadData(true)

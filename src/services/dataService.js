@@ -191,6 +191,27 @@ export const DEFAULT_INTRO = {
   ]
 };
 
+export const DEFAULT_NAVBAR = {
+  title: 'RAHMA NOVRIDAYANTI',
+  subtitle: 'PORTFOLIO.EXE 🌟',
+  items: [
+    { id: 'home', label: 'HOME', icon: 'Home', visible: true },
+    { id: 'experience', label: 'EXPERIENCE', icon: 'Briefcase', visible: true },
+    { id: 'skills', label: 'SKILLS', icon: 'Award', visible: true },
+    { id: 'contact', label: 'CONTACT', icon: 'Mail', visible: true }
+  ]
+};
+
+export const DEFAULT_FOOTER = {
+  brandTitle: 'RAHMA NOVRIDAYANTI',
+  brandSubtitle: 'MANAGEMENT & HR SPECIALIST • PEKANBARU, INDONESIA',
+  email: 'rahma.novridayanti25@gmail.com',
+  linkedin: 'https://www.linkedin.com/in/rahma-novridayanti/',
+  copyrightText: '© 2026 RAHMA NOVRIDAYANTI. ALL RIGHTS RESERVED.',
+  statusText: 'SYSTEM STATUS: ONLINE 🐾',
+  showSecretPaw: true
+};
+
 // ==========================================
 // EXPERIENCES CRUD
 // ==========================================
@@ -420,6 +441,57 @@ export async function updateIntro(data) {
   return data;
 }
 
+// ==========================================
+// NAVBAR & FOOTER CRUD
+// ==========================================
+export async function fetchNavbar() {
+  if (!isFirebaseConfigured || !db) return DEFAULT_NAVBAR;
+  try {
+    const docRef = doc(db, 'settings', 'navbar');
+    const docSnap = await withTimeout(getDoc(docRef));
+    if (docSnap.exists()) {
+      return { ...DEFAULT_NAVBAR, ...docSnap.data() };
+    }
+    return DEFAULT_NAVBAR;
+  } catch (error) {
+    console.warn('Firestore fetchNavbar failed, using defaults:', error);
+    return DEFAULT_NAVBAR;
+  }
+}
+
+export async function updateNavbar(data) {
+  if (!isFirebaseConfigured || !db) {
+    return data;
+  }
+  const docRef = doc(db, 'settings', 'navbar');
+  await withTimeout(setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true }));
+  return data;
+}
+
+export async function fetchFooter() {
+  if (!isFirebaseConfigured || !db) return DEFAULT_FOOTER;
+  try {
+    const docRef = doc(db, 'settings', 'footer');
+    const docSnap = await withTimeout(getDoc(docRef));
+    if (docSnap.exists()) {
+      return { ...DEFAULT_FOOTER, ...docSnap.data() };
+    }
+    return DEFAULT_FOOTER;
+  } catch (error) {
+    console.warn('Firestore fetchFooter failed, using defaults:', error);
+    return DEFAULT_FOOTER;
+  }
+}
+
+export async function updateFooter(data) {
+  if (!isFirebaseConfigured || !db) {
+    return data;
+  }
+  const docRef = doc(db, 'settings', 'footer');
+  await withTimeout(setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true }));
+  return data;
+}
+
 // Helper to seed Firebase with initial default data if collections are empty
 export async function seedInitialFirebaseData() {
   if (!isFirebaseConfigured || !db) {
@@ -454,9 +526,11 @@ export async function seedInitialFirebaseData() {
     await withTimeout(addDoc(collection(db, 'projects'), projData));
   }
 
-  // Seed Profile & Intro
+  // Seed Profile, Intro, Navbar, & Footer
   await withTimeout(setDoc(doc(db, 'settings', 'profile'), DEFAULT_PROFILE));
   await withTimeout(setDoc(doc(db, 'settings', 'intro'), DEFAULT_INTRO));
+  await withTimeout(setDoc(doc(db, 'settings', 'navbar'), DEFAULT_NAVBAR));
+  await withTimeout(setDoc(doc(db, 'settings', 'footer'), DEFAULT_FOOTER));
 }
 
 // ==========================================

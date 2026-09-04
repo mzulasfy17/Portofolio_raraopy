@@ -19,7 +19,27 @@ import './Experience.css';
 
 export default function Experience() {
   const [activeCategory, setActiveCategory] = useState('all');
-  const { experiences } = usePortfolioData();
+  const { experiences = [], projects = [] } = usePortfolioData();
+
+  // Normalize project items from projects collection to fit experience timeline shape
+  const normalizedProjects = projects.map((proj, idx) => ({
+    id: proj.id || `proj-norm-${idx}`,
+    category: 'project',
+    badgeLabel: proj.badgeLabel || 'PROJECT & FREELANCE',
+    role: proj.title || 'Academic Project',
+    company: proj.company || 'Independent Project / MSME Study',
+    period: proj.period || '2024 - Present',
+    location: proj.location || 'Pekanbaru, Indonesia',
+    bullets: proj.bullets || (proj.description ? [proj.description] : []),
+    skills: proj.skills || ['Project Operations', 'Case Study', 'Digital Strategy']
+  }));
+
+  // Combine experiences and normalized projects without duplicate IDs
+  const existingExpIds = new Set(experiences.map(e => e.id));
+  const combinedExperiences = [
+    ...experiences,
+    ...normalizedProjects.filter(p => !existingExpIds.has(p.id))
+  ];
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -32,13 +52,13 @@ export default function Experience() {
   };
 
   const getCategoryCount = (cat) => {
-    if (cat === 'all') return experiences.length;
-    return experiences.filter(exp => exp.category === cat).length;
+    if (cat === 'all') return combinedExperiences.length;
+    return combinedExperiences.filter(exp => exp.category === cat).length;
   };
 
   const filteredExperiences = activeCategory === 'all'
-    ? experiences
-    : experiences.filter(exp => exp.category === activeCategory);
+    ? combinedExperiences
+    : combinedExperiences.filter(exp => exp.category === activeCategory);
 
   return (
     <div className="experience-container">
