@@ -119,7 +119,7 @@ export default function Skills() {
                   </div>
                   <div className="status-card-content">
                     <div className="status-card-label">LOCATION</div>
-                    <div className="status-card-value">Pekanbaru, Indonesia</div>
+                    <div className="status-card-value">Riau, Indonesia</div>
                   </div>
                 </div>
 

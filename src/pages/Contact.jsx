@@ -220,7 +220,7 @@ const handleSubmit = async (e) => {
               <div className="profile-info-list">
                 <div className="profile-info-item">
                   <MapPin size={16} color="#7e22ce" />
-                  <span>Pekanbaru, Indonesia</span>
+                  <span>Riau, Indonesia</span>
                 </div>
 
                 <a 
