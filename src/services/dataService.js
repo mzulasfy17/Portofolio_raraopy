@@ -10,8 +10,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, isFirebaseConfigured } from './firebase';
 
-// Helper for timing out hanging Firestore requests (6s max limit)
-const withTimeout = (promise, ms = 6000, errorMsg = 'Waktu koneksi Firebase habis. Cek koneksi internet atau Firestore Rules.') => {
+// Helper for timing out hanging Firestore requests (12s max limit)
+const withTimeout = (promise, ms = 12000, errorMsg = 'Waktu koneksi Firebase habis. Cek koneksi internet atau Firestore Rules di Firebase Console.') => {
   let timer;
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error(errorMsg)), ms);
@@ -545,8 +545,8 @@ export async function uploadFileToStorage(file, folder = 'uploads') {
     try {
       const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const storageRef = ref(storage, `${folder}/${cleanFileName}`);
-      const snapshot = await withTimeout(uploadBytes(storageRef, file), 3000, 'Upload storage timeout');
-      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 3000);
+      const snapshot = await withTimeout(uploadBytes(storageRef, file), 15000, 'Upload storage timeout. Cek koneksi atau Firebase Storage Rules.');
+      const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 8000);
       if (downloadURL) return downloadURL;
     } catch (err) {
       console.warn('Firebase Storage upload unavailable, using Base64 Data URL fallback:', err);

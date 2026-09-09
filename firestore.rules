@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pengunjung website (Publik) boleh membaca data portofolio
+    // Hanya Admin yang terautentikasi (request.auth != null) yang boleh mengubah/menambah/menghapus data
+    match /{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

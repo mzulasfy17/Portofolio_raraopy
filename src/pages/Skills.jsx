@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import Window from '../components/Window';
 import avatarImg from '../assets/images/rahma-avatar.jpg';
 import { usePortfolioData } from '../hooks/usePortfolioData';
-import { 
-  Award, 
-  MapPin, 
-  GraduationCap, 
-  CheckCircle2, 
-  Monitor, 
-  Users, 
-  Target, 
+import {
+  Award,
+  MapPin,
+  GraduationCap,
+  CheckCircle2,
+  Monitor,
+  Users,
+  Target,
   BarChart3,
   Lightbulb,
   MessageSquare,
@@ -83,10 +83,10 @@ export default function Skills() {
             </div>
             <div className="skills-photo-body">
               <div className="skills-avatar-frame">
-                <img 
-                  src={profile?.avatarUrl || avatarImg} 
-                  alt="Rahma Pixel Portrait" 
-                  className="skills-avatar-img" 
+                <img
+                  src={profile?.avatarUrl || avatarImg}
+                  alt="Rahma Pixel Portrait"
+                  className="skills-avatar-img"
                   onError={(e) => { e.currentTarget.src = avatarImg; }}
                 />
                 <div className="skills-avatar-badge">● PROFILE 🌟</div>
@@ -129,7 +129,7 @@ export default function Skills() {
                   </div>
                   <div className="status-card-content">
                     <div className="status-card-label">EDUCATION</div>
-                    <div className="status-card-value">S1 Manajemen (Cumlaude)</div>
+                    <div className="status-card-value">S1 Manajemen (Keuangan)</div>
                   </div>
                 </div>
 
@@ -211,7 +211,7 @@ export default function Skills() {
 
                     {/* Single Full-width Button */}
                     {linkUrl ? (
-                      <a 
+                      <a
                         href={linkUrl}
                         target="_blank"
                         rel="noreferrer"
@@ -221,9 +221,9 @@ export default function Skills() {
                         VIEW CERTIFICATE
                       </a>
                     ) : (
-                      <button 
-                        type="button" 
-                        className="cert-full-view-btn cert-btn-disabled" 
+                      <button
+                        type="button"
+                        className="cert-full-view-btn cert-btn-disabled"
                         disabled
                       >
                         VIEW CERTIFICATE
