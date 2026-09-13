@@ -139,44 +139,7 @@
   transform: scale(1.2) rotate(6deg);
 }
 
-/* Download CV Button Container */
-.download-cv-container {
-  width: 100%;
-  margin-top: 16px;
-}
 
-.download-cv-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 18px;
-  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 50%, #6b21a8 100%);
-  background-size: 200% 200%;
-  position: relative;
-  overflow: hidden;
-  border-radius: 8px;
-  border: 2px solid #c084fc;
-  color: #ffffff;
-  font-family: var(--font-pixel-sub);
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-decoration: none;
-  box-shadow: 3px 3px 0px #3b0764;
-  transition: all 0.2s ease;
-}
-
-.download-cv-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 5px 5px 0px #3b0764;
-  background-position: 100% 0;
-}
-
-.download-cv-btn:active {
-  transform: translateY(1px);
-  box-shadow: 1px 1px 0px #3b0764;
-}
 
 /* About Me Content */
 .about-paragraph {

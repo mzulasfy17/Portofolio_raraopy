@@ -773,7 +773,7 @@ export default function Admin() {
       }
       await updateProfile(payload);
       updateLocalMemoryCache('profile', payload);
-      showToast('success', 'Profil, Foto & Dokumen CV berhasil diperbarui!');
+      showToast('success', 'Profil & Foto berhasil diperbarui!');
       await refreshData();
     } catch (err) {
       showToast('error', 'Gagal memperbarui profil: ' + err.message);
@@ -1160,12 +1160,12 @@ export default function Admin() {
             )}
 
             {/* ========================================================= */}
-            {/* TAB 4: PROFILE & CV UPLOAD SETTINGS */}
+            {/* TAB 4: PROFILE SETTINGS */}
             {/* ========================================================= */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: '680px' }}>
                 <h3 style={{ fontFamily: 'var(--font-pixel-heading)', fontSize: '0.9rem', color: '#581c87', marginBottom: '16px' }}>
-                  PENGATURAN INFORMASI UTAMA & UPLOAD FILE CV
+                  PENGATURAN INFORMASI UTAMA PROFIL
                 </h3>
 
                 <form onSubmit={handleSaveProfile} style={{ background: '#ffffff', border: '2px solid #e9d5ff', borderRadius: '12px', padding: '24px' }}>
@@ -1240,52 +1240,6 @@ export default function Admin() {
                     )}
                   </div>
 
-                  {/* UPLOAD FILE CV DOCUMENT */}
-                  <div className="admin-form-group">
-                    <label><UploadCloud size={14} /> UPLOAD FILE DOKUMEN CV (PDF)</label>
-                    <div className="file-dropzone-container">
-                      <input 
-                        type="file" 
-                        accept=".pdf"
-                        className="file-dropzone-input" 
-                        onChange={handleCvFileUpload}
-                        disabled={uploadingFile}
-                      />
-                      <div className="file-dropzone-content">
-                        {uploadingFile ? (
-                          <>
-                            <Loader2 size={24} className="animate-spin" />
-                            <span className="file-dropzone-title">Mengunggah File CV...</span>
-                          </>
-                        ) : (
-                          <>
-                            <UploadCloud size={28} />
-                            <span className="file-dropzone-title">Klik atau Seret File CV (PDF) ke Sini</span>
-                            <span className="file-dropzone-sub">Mendukung file PDF resmi</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Preview CV Link if present */}
-                    {profileForm.cvUrl && (
-                      <div className="file-preview-box">
-                        <FileText size={28} color="#9333ea" />
-                        <div className="file-preview-info">
-                          <div className="file-preview-name">File CV Terpasang:</div>
-                          <a 
-                            href={profileForm.cvUrl} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            style={{ fontSize: '0.78rem', color: '#9333ea', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            <ExternalLink size={12} /> Buka / Download CV Terdaftar
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
                   <div className="month-year-grid" style={{ marginBottom: '16px' }}>
                     <div className="admin-form-group" style={{ margin: 0 }}>
                       <label>LOKASI</label>
@@ -1318,7 +1272,7 @@ export default function Admin() {
                   </div>
 
                   <button type="submit" className="pixel-btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={actionLoading || uploadingFile}>
-                    <Save size={16} /> {actionLoading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN PROFIL & CV'}
+                    <Save size={16} /> {actionLoading ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN PROFIL'}
                   </button>
                 </form>
 

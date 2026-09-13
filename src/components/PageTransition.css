@@ -64,8 +64,7 @@
 
 /* 5. Secondary / Bottom Banners & Skill Chips (Delay 0.32s) */
 .page-slide-in-container .quest-banner-window,
-.page-slide-in-container .skills-pills,
-.page-slide-in-container .download-cv-container {
+.page-slide-in-container .skills-pills {
   animation: elementSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: 0.32s;
 }

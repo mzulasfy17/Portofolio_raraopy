@@ -10,7 +10,6 @@ import {
   Monitor, 
   GraduationCap, 
   CheckCircle2,
-  Download,
   FileText,
   Send,
   MapPin
@@ -63,19 +62,6 @@ export default function Home({ onNavigate }) {
                   <span>{item}</span>
                 </div>
               ))}
-            </div>
-
-            {/* DOWNLOAD CV BUTTON */}
-            <div className="download-cv-container">
-              <a 
-                href={profile?.cvUrl || "/CV_Rahma_Novridayanti.pdf"} 
-                download="CV_Rahma_Novridayanti.pdf" 
-                className="download-cv-btn"
-                title="Download Full Curriculum Vitae PDF"
-              >
-                <Download size={18} />
-                <span>DOWNLOAD CV (PDF)</span>
-              </a>
             </div>
           </div>
         </Window>
