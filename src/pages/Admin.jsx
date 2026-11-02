@@ -45,8 +45,9 @@ import {
   Calendar,
   Eye,
   EyeOff,
-  Compass,
-  Building2
+  Building2,
+  Camera,
+  Compass
 } from 'lucide-react';
 import './Admin.css';
 
@@ -85,6 +86,8 @@ export default function Admin() {
   const [message, setMessage] = useState(null); // { type: 'success' | 'error', text: '' }
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadStatusText, setUploadStatusText] = useState('');
+  const [uploadSavingsInfo, setUploadSavingsInfo] = useState('');
 
   // Modal States
   const [activeModal, setActiveModal] = useState(null); // 'exp' | 'skillCat' | 'cert' | 'proj' | null
@@ -116,7 +119,9 @@ export default function Admin() {
     company: '',
     location: '',
     bulletsStr: '',
-    skillsStr: ''
+    skillsStr: '',
+    imageUrl: '',
+    imageCaption: ''
   });
 
   const [skillCatForm, setSkillCatForm] = useState({
@@ -275,21 +280,27 @@ export default function Admin() {
     if (!file) return;
 
     setUploadingFile(true);
+    setUploadStatusText('Mengompresi & mengunggah dokumen sertifikat...');
     try {
-      const fileUrl = await uploadFileToStorage(file, 'certificates');
+      const res = await uploadFileToStorage(file, 'certificates', {
+        onProgress: (status) => setUploadStatusText(status),
+        returnDetails: true
+      });
+      const fileUrl = typeof res === 'string' ? res : res.url;
       const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
 
       if (isPdf) {
         setCertForm(prev => ({ ...prev, credentialUrl: fileUrl, imageUrl: '', isPdf: true }));
         showToast('success', 'Dokumen PDF sertifikat berhasil diunggah!');
       } else {
-        setCertForm(prev => ({ ...prev, imageUrl: fileUrl, isPdf: false }));
-        showToast('success', 'Gambar sertifikat berhasil diunggah!');
+        setCertForm(prev => ({ ...prev, credentialUrl: fileUrl, imageUrl: fileUrl, isPdf: false }));
+        showToast('success', res?.compressionInfo ? `Gambar sertifikat dioptimalkan & diunggah! (${res.compressionInfo})` : 'Gambar sertifikat berhasil diunggah!');
       }
     } catch (err) {
       showToast('error', 'Gagal mengunggah file: ' + err.message);
     } finally {
       setUploadingFile(false);
+      setUploadStatusText('');
       try { e.target.value = ''; } catch (_) {}
     }
   };
@@ -299,14 +310,20 @@ export default function Admin() {
     if (!file) return;
 
     setUploadingFile(true);
+    setUploadStatusText('Mengunggah dokumen CV...');
     try {
-      const fileUrl = await uploadFileToStorage(file, 'cv_documents');
+      const res = await uploadFileToStorage(file, 'cv_documents', {
+        onProgress: (status) => setUploadStatusText(status),
+        returnDetails: true
+      });
+      const fileUrl = typeof res === 'string' ? res : res.url;
       setProfileForm(prev => ({ ...prev, cvUrl: fileUrl }));
       showToast('success', 'File CV berhasil diunggah!');
     } catch (err) {
       showToast('error', 'Gagal mengunggah CV: ' + err.message);
     } finally {
       setUploadingFile(false);
+      setUploadStatusText('');
     }
   };
 
@@ -315,14 +332,49 @@ export default function Admin() {
     if (!file) return;
 
     setUploadingFile(true);
+    setUploadStatusText('Mengompresi foto profil...');
     try {
-      const fileUrl = await uploadFileToStorage(file, 'avatar_photos');
+      const res = await uploadFileToStorage(file, 'avatar_photos', {
+        onProgress: (status) => setUploadStatusText(status),
+        returnDetails: true
+      });
+      const fileUrl = typeof res === 'string' ? res : res.url;
       setProfileForm(prev => ({ ...prev, avatarUrl: fileUrl }));
-      showToast('success', 'Foto profil berhasil diunggah!');
+      showToast('success', res?.compressionInfo ? `Foto profil dioptimalkan & diunggah! (${res.compressionInfo})` : 'Foto profil berhasil diunggah!');
     } catch (err) {
       showToast('error', 'Gagal mengunggah Foto Profil: ' + err.message);
     } finally {
       setUploadingFile(false);
+      setUploadStatusText('');
+    }
+  };
+
+  const handleExpFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    setUploadStatusText('Mengompresi foto bukti magang/kerja...');
+    setUploadSavingsInfo('');
+    try {
+      const res = await uploadFileToStorage(file, 'experience_photos', {
+        onProgress: (status) => setUploadStatusText(status),
+        returnDetails: true
+      });
+      const fileUrl = typeof res === 'string' ? res : res.url;
+      setExpForm(prev => ({ ...prev, imageUrl: fileUrl, noPhoto: false }));
+      if (res?.compressionInfo) {
+        setUploadSavingsInfo(res.compressionInfo);
+        showToast('success', `Foto bukti berhasil dioptimalkan & diunggah! (${res.compressionInfo})`);
+      } else {
+        showToast('success', 'Foto bukti magang / kerja berhasil diunggah!');
+      }
+    } catch (err) {
+      showToast('error', 'Gagal mengunggah foto bukti: ' + err.message);
+    } finally {
+      setUploadingFile(false);
+      setUploadStatusText('');
+      try { e.target.value = ''; } catch (_) {}
     }
   };
 
@@ -330,17 +382,43 @@ export default function Admin() {
   const openExpModal = (exp = null) => {
     if (exp) {
       setEditingItem(exp);
+      const isFitra = (exp.company && exp.company.toUpperCase().includes('FITRA WIKA')) || exp.id === 'exp-2';
+      const isDumai = (exp.company && exp.company.toUpperCase().includes('DUMAI')) || exp.id === 'exp-2b';
+      
+      let defaultImg = '';
+      let defaultCaption = '';
+
+      if (exp.noPhoto || exp.imageUrl === '' || exp.imageUrl === 'none' || exp.photoUrl === '') {
+        defaultImg = '';
+        defaultCaption = '';
+      } else if (exp.imageUrl || exp.photoUrl) {
+        defaultImg = exp.imageUrl || exp.photoUrl;
+        defaultCaption = exp.imageCaption || '';
+      } else if (exp.imageUrl === undefined && exp.photoUrl === undefined) {
+        if (isFitra) {
+          defaultImg = '/internship_proof.jpg';
+          defaultCaption = 'Dokumentasi Pelaksanaan Magang Divisi Keuangan - PT. FITRA WIKA';
+        } else if (isDumai) {
+          defaultImg = '/internship_dumai_beton.jpg';
+          defaultCaption = 'Dokumentasi Kegiatan Administrasi & Operasional Spun Pile - PT Dumai Jaya Beton';
+        }
+      }
+
       setExpForm({
         category: exp.category || 'education',
         badgeLabel: exp.badgeLabel || 'EDUCATION',
         role: exp.role || '',
         company: exp.company || '',
+        period: exp.period || '',
         location: exp.location || '',
         bulletsStr: (exp.bullets || []).join('\n'),
-        skillsStr: (exp.skills || []).join(', ')
+        skillsStr: (exp.skills || []).join(', '),
+        imageUrl: defaultImg,
+        imageCaption: defaultCaption,
+        noPhoto: Boolean(exp.noPhoto || exp.imageUrl === '')
       });
       // Parse period string if available
-      if (exp.period && exp.period.includes('- Sekarang')) {
+      if (exp.period && (exp.period.includes('- Sekarang') || exp.period.includes('- Present'))) {
         setIsCurrent(true);
       } else {
         setIsCurrent(false);
@@ -348,53 +426,114 @@ export default function Admin() {
     } else {
       setEditingItem(null);
       setExpForm({
-        category: 'education',
-        badgeLabel: 'EDUCATION',
+        category: 'internship',
+        badgeLabel: 'INTERNSHIP',
         role: '',
         company: '',
+        period: '',
         location: '',
         bulletsStr: '',
-        skillsStr: ''
+        skillsStr: '',
+        imageUrl: '',
+        imageCaption: '',
+        noPhoto: false
       });
       setIsCurrent(false);
     }
+    setUploadSavingsInfo('');
+    setUploadStatusText('');
     setActiveModal('exp');
+  };
+
+  const handleQuickRemovePhoto = async (exp) => {
+    if (!window.confirm(`Hapus foto bukti dari "${exp.company || exp.role}"? Foto akan langsung dihilangkan.`)) return;
+    setActionLoading(true);
+    try {
+      const updatePayload = {
+        imageUrl: '',
+        photoUrl: '',
+        imageCaption: '',
+        noPhoto: true
+      };
+
+      if (!currentUser) {
+        const updatedList = experiences.map(item => item.id === exp.id ? { ...item, ...updatePayload } : item);
+        updateLocalMemoryCache('experiences', updatedList);
+        showToast('success', 'Foto bukti berhasil dihapus! (Demo Mode)');
+        return;
+      }
+
+      await updateExperience(exp.id, updatePayload);
+      const updatedList = experiences.map(item => item.id === exp.id ? { ...item, ...updatePayload } : item);
+      updateLocalMemoryCache('experiences', updatedList);
+      showToast('success', 'Foto bukti berhasil dihapus dari Firebase!');
+      await refreshData();
+    } catch (err) {
+      showToast('error', 'Gagal menghapus foto: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleSaveExp = async (e) => {
     e.preventDefault();
     setActionLoading(true);
 
-    // Build period string from dropdown selects
-    const periodText = isCurrent 
-      ? `${startMonth.slice(0, 3)} ${startYear} - Sekarang`
-      : `${startMonth.slice(0, 3)} ${startYear} - ${endMonth.slice(0, 3)} ${endYear}`;
-
     try {
+      const periodFromPickers = isCurrent 
+        ? `${startMonth.slice(0, 3)} ${startYear} - Sekarang`
+        : `${startMonth.slice(0, 3)} ${startYear} - ${endMonth.slice(0, 3)} ${endYear}`;
+      const finalPeriod = expForm.period && expForm.period.trim() ? expForm.period.trim() : periodFromPickers;
+
+      const isPhotoCleared = !expForm.imageUrl || expForm.noPhoto || expForm.imageUrl.trim() === '';
       const payload = {
         category: expForm.category,
         badgeLabel: expForm.badgeLabel,
         role: expForm.role,
         company: expForm.company,
-        period: periodText,
+        period: finalPeriod,
         location: expForm.location,
         bullets: expForm.bulletsStr.split('\n').filter(Boolean),
-        skills: expForm.skillsStr.split(',').map(s => s.trim()).filter(Boolean)
+        skills: expForm.skillsStr.split(',').map(s => s.trim()).filter(Boolean),
+        imageUrl: isPhotoCleared ? '' : expForm.imageUrl.trim(),
+        photoUrl: isPhotoCleared ? '' : expForm.imageUrl.trim(),
+        imageCaption: isPhotoCleared ? '' : (expForm.imageCaption ? expForm.imageCaption.trim() : ''),
+        noPhoto: isPhotoCleared
       };
 
       if (!currentUser) {
+        const newExp = { id: editingItem?.id || 'exp-' + Date.now(), ...payload };
+        let updatedList;
+        if (editingItem?.id) {
+          updatedList = experiences.map(item => item.id === editingItem.id ? newExp : item);
+        } else {
+          updatedList = [newExp, ...experiences];
+        }
+        updateLocalMemoryCache('experiences', updatedList);
         showToast('success', 'Pengalaman berhasil diperbarui! (Demo Mode)');
         setActiveModal(null);
         return;
       }
 
-      if (editingItem && editingItem.id && !editingItem.id.startsWith('exp-')) {
+      let newExp;
+      if (editingItem && editingItem.id) {
         await updateExperience(editingItem.id, payload);
+        newExp = { id: editingItem.id, ...payload };
         showToast('success', 'Pengalaman berhasil diperbarui!');
       } else {
-        await addExperience(payload);
+        const saved = await addExperience(payload);
+        newExp = { id: saved.id, ...payload };
         showToast('success', 'Pengalaman baru berhasil disimpan ke Firebase!');
       }
+
+      let updatedList;
+      if (editingItem?.id) {
+        updatedList = experiences.map(item => item.id === editingItem.id ? newExp : item);
+      } else {
+        updatedList = [newExp, ...experiences];
+      }
+      updateLocalMemoryCache('experiences', updatedList);
+
       setActiveModal(null);
       await refreshData();
     } catch (err) {
@@ -408,7 +547,15 @@ export default function Admin() {
     if (!window.confirm('Hapus item pengalaman ini?')) return;
     setActionLoading(true);
     try {
+      if (!currentUser) {
+        const updatedList = experiences.filter(exp => exp.id !== id);
+        updateLocalMemoryCache('experiences', updatedList);
+        showToast('success', 'Pengalaman berhasil dihapus! (Demo Mode)');
+        return;
+      }
       await deleteExperience(id);
+      const updatedList = experiences.filter(exp => exp.id !== id);
+      updateLocalMemoryCache('experiences', updatedList);
       showToast('success', 'Pengalaman berhasil dihapus.');
       await refreshData();
     } catch (err) {
@@ -907,6 +1054,18 @@ export default function Admin() {
               <button type="submit" className="pixel-btn-primary" style={{ width: '100%', marginTop: '10px' }} disabled={authLoading}>
                 {authLoading ? 'LOGGING IN...' : 'LOGIN TO ADMIN'}
               </button>
+
+              <div style={{ marginTop: '14px', textAlign: 'center' }}>
+                <div style={{ margin: '6px 0', fontSize: '0.74rem', color: '#94a3b8' }}>— ATAU —</div>
+                <button 
+                  type="button" 
+                  className="pixel-btn-secondary" 
+                  style={{ width: '100%', fontSize: '0.76rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  onClick={() => { setIsDemoMode(true); showToast('success', 'Masuk ke Demo Mode Admin.'); }}
+                >
+                  🎮 Masuk Demo Mode (Preview Admin UI & Upload Data)
+                </button>
+              </div>
             </form>
           </div>
         ) : (
@@ -999,6 +1158,69 @@ export default function Admin() {
                         </p>
                       </div>
                       <div style={{ borderTop: '1px solid #f3e8ff', paddingTop: '8px', marginTop: '8px' }}>
+                        {(() => {
+                          const isFitra = (exp.company && exp.company.toUpperCase().includes('FITRA WIKA')) || exp.id === 'exp-2';
+                          const isDumai = (exp.company && exp.company.toUpperCase().includes('DUMAI')) || exp.id === 'exp-2b';
+                          const isPhotoCleared = exp.noPhoto || exp.imageUrl === '' || exp.imageUrl === 'none' || exp.photoUrl === '';
+                          const expThumb = isPhotoCleared ? null : (exp.imageUrl || exp.photoUrl || (
+                            (exp.imageUrl === undefined && exp.photoUrl === undefined) ? (isFitra ? '/internship_proof.jpg' : (isDumai ? '/internship_dumai_beton.jpg' : null)) : null
+                          ));
+                          const expCaption = exp.imageCaption || (isFitra ? 'Dokumentasi Divisi Keuangan - PT. FITRA WIKA' : (isDumai ? 'Dokumentasi Administrasi & Spun Pile - PT Dumai Jaya Beton' : 'Dokumentasi aktif'));
+
+                          return expThumb ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', background: '#faf5ff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #e9d5ff' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                <img 
+                                  src={expThumb} 
+                                  alt="Bukti Magang" 
+                                  style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '6px', border: '1.5px solid #c084fc', flexShrink: 0 }} 
+                                />
+                                <div style={{ overflow: 'hidden' }}>
+                                  <span style={{ fontSize: '0.73rem', fontWeight: 'bold', color: '#6b21a8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    📸 Bukti Foto Terlampir ✓
+                                  </span>
+                                  <span style={{ fontSize: '0.67rem', color: '#64748b', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {expCaption}
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                                <button
+                                  type="button"
+                                  className="pixel-btn-secondary"
+                                  style={{ fontSize: '0.65rem', padding: '3px 8px' }}
+                                  onClick={() => openExpModal(exp)}
+                                  title="Ganti atau ubah foto bukti"
+                                >
+                                  Ganti Foto
+                                </button>
+                                <button
+                                  type="button"
+                                  className="pixel-btn-danger"
+                                  style={{ fontSize: '0.65rem', padding: '3px 8px' }}
+                                  onClick={() => handleQuickRemovePhoto(exp)}
+                                  title="Hapus foto bukti dari pengalaman ini"
+                                >
+                                  Hapus Foto
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', background: '#faf5ff', padding: '6px 10px', borderRadius: '8px', border: '1.5px dashed #d8b4fe' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#7e22ce', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <Camera size={13} /> Belum ada foto bukti
+                              </span>
+                              <button 
+                                type="button" 
+                                className="pixel-btn-primary" 
+                                style={{ fontSize: '0.66rem', padding: '3px 8px' }}
+                                onClick={() => openExpModal(exp)}
+                              >
+                                + Pasang Foto
+                              </button>
+                            </div>
+                          );
+                        })()}
                         <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                           {(exp.bullets || []).length} poin deskripsi • {(exp.skills || []).length} tag skill
                         </span>
@@ -1638,6 +1860,107 @@ export default function Admin() {
                 />
               </div>
 
+              {/* FOTO BUKTI MAGANG / DOKUMENTASI KERJA */}
+              <div className="admin-form-group" style={{ background: '#faf5ff', padding: '14px', borderRadius: '10px', border: '1.5px solid #d8b4fe' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6b21a8', fontWeight: 'bold' }}>
+                  <ImageIcon size={15} /> FOTO BUKTI MAGANG / DOKUMENTASI KERJA (OPSIONAL)
+                </label>
+                <p style={{ fontSize: '0.74rem', color: '#7e22ce', margin: '2px 0 10px 0' }}>
+                  Unggah foto dokumentasi kegiatan saat magang, suasana kantor, atau sertifikat kerja sebagai bukti otentik.
+                </p>
+
+                {/* Dropzone Upload */}
+                <div className="file-dropzone-container">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="file-dropzone-input" 
+                    onChange={handleExpFileUpload}
+                    disabled={uploadingFile}
+                  />
+                  <div className="file-dropzone-content">
+                    {uploadingFile ? (
+                      <>
+                        <Loader2 size={24} className="animate-spin" />
+                        <span className="file-dropzone-title">{uploadStatusText || 'Mengompresi & Mengunggah Foto Bukti...'}</span>
+                        <span className="file-dropzone-sub">Foto sedang dioptimalkan agar berukuran ringan dan cepat dimuat</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud size={28} />
+                        <span className="file-dropzone-title">Klik atau Seret Foto Bukti (PNG/JPG/WEBP) ke Sini</span>
+                        <span className="file-dropzone-sub">⚡ Otomatis Dikompresi: Foto kamera HP diperkecil ke resolusi optimal agar upload kilat & web tetap cepat</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Direct URL input */}
+                <div style={{ marginTop: '10px' }}>
+                  <label style={{ fontSize: '0.7rem', color: '#6b21a8', display: 'block', marginBottom: '3px' }}>
+                    ATAU MASUKKAN URL FOTO LANGSUNG:
+                  </label>
+                  <input 
+                    type="text" 
+                    className="admin-input" 
+                    placeholder="https://... atau /nama_foto.jpg" 
+                    value={expForm.imageUrl} 
+                    onChange={(e) => setExpForm({ ...expForm, imageUrl: e.target.value })} 
+                  />
+                </div>
+
+                {/* Caption input */}
+                <div style={{ marginTop: '10px' }}>
+                  <label style={{ fontSize: '0.7rem', color: '#6b21a8', display: 'block', marginBottom: '3px' }}>
+                    KETERANGAN / CAPTION FOTO:
+                  </label>
+                  <input 
+                    type="text" 
+                    className="admin-input" 
+                    placeholder="Contoh: Dokumentasi Kegiatan Administrasi / Suasana Kantor" 
+                    value={expForm.imageCaption} 
+                    onChange={(e) => setExpForm({ ...expForm, imageCaption: e.target.value })} 
+                  />
+                </div>
+
+                {/* Live Preview Box */}
+                {expForm.imageUrl && (
+                  <div className="file-preview-box" style={{ marginTop: '12px' }}>
+                    <img 
+                      src={expForm.imageUrl} 
+                      alt="Preview Bukti Magang" 
+                      className="file-preview-thumb" 
+                      style={{ width: '80px', height: '60px', objectFit: 'cover' }}
+                    />
+                    <div className="file-preview-info" style={{ flex: 1, minWidth: 0 }}>
+                      <div className="file-preview-name">✓ Foto Bukti Terpasang</div>
+                      <span style={{ fontSize: '0.74rem', color: '#166534', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {expForm.imageCaption || 'Dokumentasi aktif'}
+                      </span>
+                      {uploadSavingsInfo && (
+                        <div style={{ marginTop: '4px' }}>
+                          <span style={{ fontSize: '0.68rem', color: '#15803d', fontWeight: 'bold', background: '#dcfce7', padding: '2px 6px', borderRadius: '4px', border: '1px solid #86efac', display: 'inline-block' }}>
+                            ⚡ Kompresi Berhasil: {uploadSavingsInfo}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      type="button" 
+                      className="pixel-btn-danger" 
+                      style={{ padding: '6px 12px', fontSize: '0.72rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      onClick={() => {
+                        setExpForm(prev => ({ ...prev, imageUrl: '', imageCaption: '', noPhoto: true }));
+                        setUploadSavingsInfo('');
+                        showToast('success', 'Foto bukti dihapus dari formulir. Klik Simpan Data untuk menerapkan perubahan.');
+                      }}
+                    >
+                      <Trash2 size={13} /> Hapus Foto Bukti
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
                 <button type="button" className="pixel-btn-secondary" onClick={() => setActiveModal(null)}>Batal</button>
                 <button type="submit" className="pixel-btn-primary" disabled={actionLoading}>
@@ -1752,11 +2075,29 @@ export default function Admin() {
                 <input 
                   type="text" 
                   className="admin-input" 
-                  placeholder="https://freecodecamp.org/certification/..." 
+                  placeholder="https://freecodecamp.org/certification/... atau link file" 
                   value={certForm.credentialUrl} 
                   onChange={(e) => setCertForm({ ...certForm, credentialUrl: e.target.value })} 
                   required
                 />
+              </div>
+
+              {/* Upload File / Gambar Sertifikat (Auto-Compressed) */}
+              <div className="admin-form-group" style={{ background: '#faf5ff', padding: '12px', borderRadius: '8px', border: '1.5px dashed #d8b4fe' }}>
+                <label style={{ fontSize: '0.72rem', color: '#6b21a8', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
+                  <UploadCloud size={14} /> ATAU UNGGAH FILE SERTIFIKAT (GAMBAR / PDF)
+                </label>
+                <input 
+                  type="file" 
+                  accept="image/*,application/pdf"
+                  className="file-dropzone-input" 
+                  style={{ marginTop: '6px' }}
+                  onChange={handleCertFileUpload}
+                  disabled={uploadingFile}
+                />
+                <span style={{ fontSize: '0.68rem', color: '#7e22ce', display: 'block', marginTop: '4px' }}>
+                  {uploadingFile ? (uploadStatusText || 'Mengunggah file sertifikat...') : '⚡ Foto sertifikat otomatis dikompres agar loading cepat & upload kilat'}
+                </span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>

@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, isFirebaseConfigured } from './firebase';
+import { compressImage } from '../utils/imageCompressor';
 
 // Helper for timing out hanging Firestore requests (12s max limit)
 const withTimeout = (promise, ms = 12000, errorMsg = 'Waktu koneksi Firebase habis. Cek koneksi internet atau Firestore Rules di Firebase Console.') => {
@@ -52,7 +53,27 @@ export const DEFAULT_EXPERIENCES = [
       'Melakukan analisis sederhana terhadap laporan keuangan untuk mendukung pengambilan keputusan manajerial.',
       'Berkontribusi dalam koordinasi internal tim dan komunikasi lintas departemen untuk kelancaran operasional administrasi.'
     ],
-    skills: ['UAT Testing', 'Digital Banking', 'CMS System', 'Data Entry', 'Financial Admin']
+    skills: ['UAT Testing', 'Digital Banking', 'CMS System', 'Data Entry', 'Financial Admin'],
+    imageUrl: '/internship_proof.jpg',
+    imageCaption: 'Dokumentasi Pelaksanaan Magang Divisi Keuangan - PT. FITRA WIKA'
+  },
+  {
+    id: 'exp-2b',
+    category: 'internship',
+    badgeLabel: 'INTERNSHIP',
+    role: 'Administration & Operations Intern',
+    company: 'PT Dumai Jaya Beton',
+    period: 'Mar 2023 - Des 2023',
+    location: 'Dumai, Indonesia',
+    bullets: [
+      'Menangani sekitar 70–100 dokumen pengeluaran Spun Pile melalui proses penyalinan dan pemindaian untuk mendukung kelengkapan administrasi perusahaan.',
+      'Menginput dan memperbarui sekitar 100 data pemasukan dan pengeluaran bahan baku untuk mendukung pencatatan serta monitoring aktivitas operasional.',
+      'Mengelola dokumen dan data operasional secara terstruktur selama 10 bulan internship, sehingga informasi lebih mudah ditelusuri ketika dibutuhkan.',
+      'Menyelesaikan pekerjaan administrasi rutin dengan mengutamakan ketelitian, akurasi data stok, dan ketepatan waktu pengarsipan.'
+    ],
+    skills: ['Spun Pile Documentation', 'Operations Administration', 'Raw Material Log', 'Inventory Tracking', 'Microsoft Excel'],
+    imageUrl: '/internship_dumai_beton.jpg',
+    imageCaption: 'Dokumentasi Kegiatan Administrasi & Operasional Spun Pile - PT Dumai Jaya Beton'
   },
   {
     id: 'exp-3',
@@ -526,10 +547,37 @@ export async function seedInitialFirebaseData() {
 }
 
 // ==========================================
-// FILE UPLOAD HELPER (FIREBASE STORAGE OR DATA URL FALLBACK)
+// FILE UPLOAD HELPER (WITH AUTO-COMPRESSION & FIREBASE STORAGE OR DATA URL FALLBACK)
 // ==========================================
-export async function uploadFileToStorage(file, folder = 'uploads') {
+export async function uploadFileToStorage(file, folder = 'uploads', options = {}) {
   if (!file) return null;
+
+  const onProgress = typeof options === 'function' ? options : options.onProgress;
+  const returnDetails = options.returnDetails || false;
+
+  // 1. Auto-compress if it's an image
+  let uploadTarget = file;
+  let compressionMeta = null;
+
+  if (file.type && file.type.startsWith('image/')) {
+    if (onProgress) onProgress('Mengompresi foto bukti...');
+    try {
+      const maxDim = folder === 'avatar_photos' ? 800 : (options.maxWidth || 1600);
+      const compResult = await compressImage(file, {
+        maxWidth: maxDim,
+        maxHeight: maxDim,
+        quality: options.quality || 0.82
+      });
+
+      if (compResult.compressed) {
+        uploadTarget = compResult.file;
+        compressionMeta = compResult;
+        console.log(`[Upload] Image auto-compressed: ${compResult.info}`);
+      }
+    } catch (e) {
+      console.warn('Image auto-compression skipped, uploading original:', e);
+    }
+  }
 
   const readAsDataURL = (fileToRead) => {
     return new Promise((resolve, reject) => {
@@ -540,19 +588,43 @@ export async function uploadFileToStorage(file, folder = 'uploads') {
     });
   };
 
-  // 1. Try Firebase Storage if configured
+  if (onProgress) onProgress('Mengunggah ke server...');
+
+  let finalUrl = null;
+
+  // 2. Try Firebase Storage if configured
   if (isFirebaseConfigured && storage) {
     try {
-      const cleanFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const cleanFileName = `${Date.now()}_${uploadTarget.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const storageRef = ref(storage, `${folder}/${cleanFileName}`);
-      const snapshot = await withTimeout(uploadBytes(storageRef, file), 15000, 'Upload storage timeout. Cek koneksi atau Firebase Storage Rules.');
+      const snapshot = await withTimeout(
+        uploadBytes(storageRef, uploadTarget), 
+        15000, 
+        'Upload storage timeout. Cek koneksi atau Firebase Storage Rules.'
+      );
       const downloadURL = await withTimeout(getDownloadURL(snapshot.ref), 8000);
-      if (downloadURL) return downloadURL;
+      if (downloadURL) finalUrl = downloadURL;
     } catch (err) {
       console.warn('Firebase Storage upload unavailable, using Base64 Data URL fallback:', err);
     }
   }
 
-  // 2. Fallback to FileReader Data URL (for local demo & offline testing)
-  return await readAsDataURL(file);
+  // 3. Fallback to FileReader Data URL (for local demo & offline testing)
+  // Because it was compressed, this Base64 string is tiny (~80-250KB instead of 10MB)!
+  if (!finalUrl) {
+    finalUrl = await readAsDataURL(uploadTarget);
+  }
+
+  if (returnDetails) {
+    return {
+      url: finalUrl,
+      compressionInfo: compressionMeta?.info || null,
+      savingsPercent: compressionMeta?.savingsPercent || 0,
+      originalSize: compressionMeta?.originalSize || file.size,
+      finalSize: compressionMeta?.finalSize || uploadTarget.size,
+      compressed: !!compressionMeta?.compressed
+    };
+  }
+
+  return finalUrl;
 }

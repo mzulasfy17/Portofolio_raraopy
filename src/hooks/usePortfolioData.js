@@ -18,16 +18,36 @@ import {
   DEFAULT_FOOTER
 } from '../services/dataService';
 
-// Global In-Memory Cache shared across all page transitions
+const STORAGE_PREFIX = 'portfolio_data_cache_';
+
+function getStoredData(key, fallback) {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    // ignore
+  }
+  return fallback;
+}
+
+function setStoredData(key, value) {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Global In-Memory Cache shared across all page transitions with LocalStorage backup
 let memoryCache = {
-  experiences: DEFAULT_EXPERIENCES,
-  skillCategories: DEFAULT_SKILL_CATEGORIES,
-  certificates: DEFAULT_CERTIFICATES,
-  projects: DEFAULT_PROJECTS,
-  profile: DEFAULT_PROFILE,
-  intro: DEFAULT_INTRO,
-  navbar: DEFAULT_NAVBAR,
-  footer: DEFAULT_FOOTER,
+  experiences: getStoredData('experiences', DEFAULT_EXPERIENCES),
+  skillCategories: getStoredData('skillCategories', DEFAULT_SKILL_CATEGORIES),
+  certificates: getStoredData('certificates', DEFAULT_CERTIFICATES),
+  projects: getStoredData('projects', DEFAULT_PROJECTS),
+  profile: getStoredData('profile', DEFAULT_PROFILE),
+  intro: getStoredData('intro', DEFAULT_INTRO),
+  navbar: getStoredData('navbar', DEFAULT_NAVBAR),
+  footer: getStoredData('footer', DEFAULT_FOOTER),
   isFetched: false
 };
 
@@ -39,6 +59,7 @@ function notifyListeners() {
 
 export function updateLocalMemoryCache(key, newData) {
   memoryCache[key] = newData;
+  setStoredData(key, newData);
   notifyListeners();
 }
 
@@ -65,11 +86,28 @@ export function usePortfolioData() {
         fetchFooter()
       ]);
       
+      // Preserve local user edits if remote returned identical fallback defaults
+      const storedExp = getStoredData('experiences', null);
+      const finalExp = (expData === DEFAULT_EXPERIENCES && storedExp) ? storedExp : expData;
+      setStoredData('experiences', finalExp);
+
+      const storedSkills = getStoredData('skillCategories', null);
+      const finalSkills = (skillsData === DEFAULT_SKILL_CATEGORIES && storedSkills) ? storedSkills : skillsData;
+      setStoredData('skillCategories', finalSkills);
+
+      const storedCerts = getStoredData('certificates', null);
+      const finalCerts = (certsData === DEFAULT_CERTIFICATES && storedCerts) ? storedCerts : certsData;
+      setStoredData('certificates', finalCerts);
+
+      const storedProj = getStoredData('projects', null);
+      const finalProj = (projData === DEFAULT_PROJECTS && storedProj) ? storedProj : projData;
+      setStoredData('projects', finalProj);
+
       memoryCache = {
-        experiences: expData,
-        skillCategories: skillsData,
-        certificates: certsData,
-        projects: projData,
+        experiences: finalExp,
+        skillCategories: finalSkills,
+        certificates: finalCerts,
+        projects: finalProj,
         profile: profileData,
         intro: introData,
         navbar: navData,

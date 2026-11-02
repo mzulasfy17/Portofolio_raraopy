@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SplashScreen from './components/SplashScreen';
@@ -10,12 +10,32 @@ import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import './App.css';
 
+const getTabFromHash = () => {
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  if (['home', 'experience', 'skills', 'contact', 'admin'].includes(hash)) {
+    return hash;
+  }
+  return 'home';
+};
+
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('home');
+  const initialTab = getTabFromHash();
+  const [showSplash, setShowSplash] = useState(initialTab === 'home');
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const tab = getTabFromHash();
+      setActiveTab(tab);
+      if (tab !== 'home') setShowSplash(false);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const handleTabChange = (newTab) => {
     if (newTab === activeTab) return;
+    window.location.hash = newTab;
     setActiveTab(newTab);
   };
 

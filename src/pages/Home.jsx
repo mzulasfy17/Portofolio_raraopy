@@ -121,11 +121,28 @@ export default function Home({ onNavigate }) {
               const displayDesc = (item.bullets && item.bullets[0]) || item.description || item.location;
               const badgeText = item.period ? item.period.replace(' - ', ' -\n') : '2025';
 
+              const isPhotoCleared = item.noPhoto || item.imageUrl === '' || item.imageUrl === 'none' || item.photoUrl === '';
+              const hasProof = !isPhotoCleared && (
+                item.imageUrl || item.photoUrl || (
+                  (item.imageUrl === undefined && item.photoUrl === undefined) && (
+                    item.id === 'exp-2' || (item.company && item.company.toUpperCase().includes('FITRA WIKA')) ||
+                    item.id === 'exp-2b' || (item.company && item.company.toUpperCase().includes('DUMAI'))
+                  )
+                )
+              );
+
               return (
-                <div key={item.id} className="experience-item">
+                <div key={item.id} className="experience-item" onClick={() => onNavigate && onNavigate('experience')} style={{ cursor: 'pointer' }}>
                   <div className="experience-year-badge">{badgeText}</div>
-                  <div>
-                    <div className="experience-role">{displayTitle}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                      <div className="experience-role">{displayTitle}</div>
+                      {hasProof && (
+                        <span className="home-exp-proof-badge" title="Tersedia bukti foto magang/kerja resmi">
+                          📸 Bukti Foto
+                        </span>
+                      )}
+                    </div>
                     <div className="experience-company">{displaySubtitle}</div>
                     <div className="experience-desc">{displayDesc}</div>
                   </div>

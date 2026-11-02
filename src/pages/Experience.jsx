@@ -13,12 +13,16 @@ import {
   Building2, 
   Star,
   User,
-  FileText
+  FileText,
+  Camera,
+  ZoomIn
 } from 'lucide-react';
+import ExperienceProofModal from '../components/ExperienceProofModal';
 import './Experience.css';
 
 export default function Experience() {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [selectedProof, setSelectedProof] = useState(null);
   const { experiences = [], projects = [], profile } = usePortfolioData();
 
   // Normalize project items from projects collection to fit experience timeline shape
@@ -49,6 +53,42 @@ export default function Experience() {
       case 'project': return Sparkles;
       default: return Briefcase;
     }
+  };
+
+  const getProofImage = (item) => {
+    // If photo was explicitly deleted or marked as empty
+    if (item.noPhoto || item.imageUrl === '' || item.imageUrl === 'none' || item.photoUrl === '') {
+      return null;
+    }
+    if (item.imageUrl) return item.imageUrl;
+    if (item.photoUrl) return item.photoUrl;
+
+    // Only fallback if imageUrl and photoUrl have never been set (undefined initial state)
+    if (item.imageUrl === undefined && item.photoUrl === undefined) {
+      if (item.id === 'exp-2' || (item.company && item.company.toUpperCase().includes('FITRA WIKA'))) {
+        return '/internship_proof.jpg';
+      }
+      if (item.id === 'exp-2b' || (item.company && item.company.toUpperCase().includes('DUMAI'))) {
+        return '/internship_dumai_beton.jpg';
+      }
+    }
+    return null;
+  };
+
+  const getProofCaption = (item) => {
+    if (item.noPhoto || item.imageUrl === '' || item.imageUrl === 'none' || item.photoUrl === '') {
+      return '';
+    }
+    if (item.imageCaption) return item.imageCaption;
+    if (item.imageUrl === undefined && item.photoUrl === undefined) {
+      if (item.id === 'exp-2' || (item.company && item.company.toUpperCase().includes('FITRA WIKA'))) {
+        return 'Dokumentasi Pelaksanaan Magang Divisi Keuangan - PT. FITRA WIKA';
+      }
+      if (item.id === 'exp-2b' || (item.company && item.company.toUpperCase().includes('DUMAI'))) {
+        return 'Dokumentasi Kegiatan Administrasi & Operasional Spun Pile - PT Dumai Jaya Beton';
+      }
+    }
+    return item.category === 'internship' ? `Dokumentasi Resmi Kegiatan Magang - ${item.company}` : `Dokumentasi Kegiatan - ${item.company}`;
   };
 
   const getCategoryCount = (cat) => {
@@ -229,6 +269,8 @@ export default function Experience() {
               <div className="timeline-list">
                 {filteredExperiences.map((item) => {
                   const IconComp = item.icon || getCategoryIcon(item.category);
+                  const proofImg = getProofImage(item);
+                  const captionText = getProofCaption(item);
                   return (
                     <div key={`${item.id}-${activeCategory}`} className="exp-card-item">
                       <div className="timeline-bullet" />
@@ -262,6 +304,45 @@ export default function Experience() {
                           ))}
                         </ul>
 
+                        {/* Proof of Internship / Work Photo Widget */}
+                        {proofImg && (
+                          <div className="exp-proof-card">
+                            <div className="exp-proof-card-header">
+                              <div className="exp-proof-badge">
+                                <Camera size={13} />
+                                <span>BUKTI DOKUMENTASI {item.category === 'internship' ? 'MAGANG' : 'KEGIATAN / KERJA'}</span>
+                              </div>
+                              <span className="exp-proof-click-hint">Klik foto untuk perbesar 🔍</span>
+                            </div>
+
+                            <div 
+                              className="exp-proof-thumb-container" 
+                              onClick={() => setSelectedProof({ ...item, imageUrl: proofImg, imageCaption: captionText })}
+                              title={`Klik untuk melihat bukti foto dokumentasi ${item.role} di ${item.company}`}
+                            >
+                              <img 
+                                src={proofImg} 
+                                alt={`Bukti Dokumentasi ${item.role} di ${item.company}`}
+                                className="exp-proof-thumb-img"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                              <div className="exp-proof-thumb-overlay">
+                                <div className="exp-proof-zoom-pill">
+                                  <ZoomIn size={13} />
+                                  <span>LIHAT FOTO RESMI</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {captionText && (
+                              <div className="exp-proof-caption-text">
+                                <span>📌</span> {captionText}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Skill Pills */}
                         <div className="exp-card-tags">
                           {(item.skills || []).map((skill, idx) => (
@@ -291,6 +372,14 @@ export default function Experience() {
           </main>
         </div>
       </Window>
+
+      {/* Proof Lightbox / Evidence Viewer Modal */}
+      {selectedProof && (
+        <ExperienceProofModal 
+          item={selectedProof} 
+          onClose={() => setSelectedProof(null)} 
+        />
+      )}
     </div>
   );
 }
